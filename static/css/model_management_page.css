@@ -1,0 +1,44 @@
+/* Model Management Page (model_management_page.css) */
+/* Use Poppins for this page while falling back to the site font stack */
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+/* Ensure the main content sits next to the offcanvas sidebar on lg+ */
+@media (min-width: 992px) {
+    .layout.has-sidebar .main-content {
+        margin-left: 248px
+        }
+    }
+/* Loading overlay centered over main content */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.6);
+    z-index: 1040;
+    /* above content, below modals */
+    text-align: center;
+    color: var(--text)
+    }
+/* Tighten controls spacing in table header */
+.card-header .form-select.form-select-sm, .card-header .input-group.input-group-sm {
+    min-width: auto
+    }
+/* Make chart container a bit taller on larger screens */
+.app-card canvas#maeChart {
+    min-height: 220px
+    }
+/* Improve badge contrast in table */
+.badge-soft.secondary {
+    background: var(--secondary-soft);
+    color: #6c1746
+    }
+/* Responsive tweaks */
+@media (max-width: 575.98px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px
+        }
+    }

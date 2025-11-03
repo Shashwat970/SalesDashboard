@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html class="h-100 layout has-sidebar" lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Model Management | Admin - ACME Foods
+  </title>
+  <!-- Brand font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <!-- Site theme -->
+  <link href="style.css" rel="stylesheet"/>
+  <!-- Page-specific CSS -->
+  <link href="model_management_page.css" rel="stylesheet"/>
+ </head>
+ <body class="d-flex flex-column min-vh-100">
+  <!-- Header (Admin) -->
+  <style>
+   .admin-navbar { background-color: var(--primary); }
+    .admin-navbar .nav-link, .admin-navbar .navbar-brand, .admin-navbar .navbar-text { color:#fff; }
+    .admin-navbar .nav-link:hover { color:#212529; background: rgba(255,255,255,.2); border-radius:.375rem; }
+    .badge-dot { width:8px; height:8px; background:#dc3545; border-radius:50%; display:inline-block; margin-left:-6px; margin-top:-6px; position:absolute; }
+  </style>
+  <nav class="navbar navbar-expand-lg admin-navbar py-2">
+   <div class="container-fluid">
+    <button aria-controls="appSidebar" aria-label="Toggle sidebar" class="btn btn-light d-lg-none me-2" data-bs-target="#appSidebar" data-bs-toggle="offcanvas" type="button">
+     <i class="fa-solid fa-bars">
+     </i>
+    </button>
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+     <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/adminlogo/28/28';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:28px;width:28px;border-radius:.25rem;"/>
+     Admin
+    </a>
+    <div class="d-none d-lg-flex flex-grow-1 mx-3">
+     <form action="#" class="w-50" onsubmit="event.preventDefault();" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" id="globalSearch" name="q" placeholder="Search products, users, models…" type="search"/>
+      </div>
+     </form>
+    </div>
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-light btn-sm" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-1">
+       </i>
+       Upload Data
+      </a>
+     </li>
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-dark btn-sm" href="{{ url_for('model_management') }}" style="background-color: var(--secondary); border-color: var(--secondary);">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train Model
+      </a>
+     </li>
+     <li class="nav-item dropdown">
+      <a aria-expanded="false" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#" role="button">
+       <span class="avatar rounded-circle bg-dark d-inline-flex justify-content-center align-items-center me-2" style="width:28px;height:28px;">
+        <i class="fa-solid fa-user-gear text-white small">
+        </i>
+       </span>
+       <span class="d-none d-sm-inline" id="currentUserName">
+        Alex Admin
+       </span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+       <li>
+        <h6 class="dropdown-header">
+         Admin
+        </h6>
+       </li>
+       <li>
+        <a class="dropdown-item" href="#">
+         <i class="fa-solid fa-gear me-2">
+         </i>
+         Settings
+        </a>
+       </li>
+       <li>
+        <hr class="dropdown-divider"/>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('login') }}">
+         <i class="fa-solid fa-right-from-bracket me-2">
+         </i>
+         Logout
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+  </nav>
+  <!-- Sidebar (Admin) -->
+  <style>
+   :root { --primary:#f08e1b; --secondary:#9a296a; }
+    .admin-sidebar .nav-link { color:#333; border-radius:.375rem; }
+    .admin-sidebar .nav-link:hover { background:rgba(240,142,27,.12); color:var(--secondary); }
+    .admin-sidebar .nav-link.active { background:rgba(240,142,27,.18); color:#000; border-left:4px solid var(--primary); }
+    .admin-sidebar .section-title { font-size:.75rem; color:#6c757d; text-transform:uppercase; letter-spacing:.08em; margin:1rem 0 .25rem; }
+    .admin-sidebar .profile { background:linear-gradient(90deg, rgba(240,142,27,.08), rgba(154,41,106,.08)); border-radius:.5rem; }
+  </style>
+  <div aria-labelledby="appSidebarLabel" class="offcanvas offcanvas-start offcanvas-lg admin-sidebar" id="appSidebar" style="--bs-offcanvas-width: 248px;" tabindex="-1">
+   <div class="offcanvas-header d-lg-none">
+    <h5 class="offcanvas-title" id="appSidebarLabel">
+     Admin Navigation
+    </h5>
+    <button aria-label="Close" class="btn-close text-reset" data-bs-dismiss="offcanvas" type="button">
+    </button>
+   </div>
+   <div class="offcanvas-body p-0 d-flex flex-column">
+    <div class="p-3 border-bottom">
+     <a class="d-flex align-items-center text-decoration-none" href="./admin_dashboard.html">
+      <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/sidebarlogo/32/32';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:32px;width:32px;object-fit:cover;border-radius:.25rem;"/>
+      <span class="fw-semibold" style="color:var(--secondary)">
+       Sales Forecasting Admin
+      </span>
+     </a>
+    </div>
+    <div class="p-3 profile d-flex align-items-center gap-2">
+     <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;background-color: var(--secondary) !important; color:#fff;">
+      <i class="fa-solid fa-user">
+      </i>
+     </div>
+     <div>
+      <div class="fw-semibold" id="sidebarUserName">
+       Alex Admin
+      </div>
+      <div class="text-muted small">
+       Admin
+      </div>
+     </div>
+    </div>
+    <nav class="px-2 py-2 sidebar-nav">
+     <div class="section-title px-2">
+      Overview
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+        <i class="fa-solid fa-gauge me-2">
+        </i>
+        Dashboard
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Data
+     </div>
+     <div class="accordion accordion-flush" id="dataAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingData">
+        <button aria-controls="collapseData" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseData" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-database me-2">
+         </i>
+         Data Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingData" class="accordion-collapse collapse" data-bs-parent="#dataAccordion" id="collapseData">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('upload_page') }}">
+            <i class="fa-solid fa-file-arrow-up me-2">
+            </i>
+            Upload Data
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('product_management') }}">
+            <i class="fa-solid fa-boxes-stacked me-2">
+            </i>
+            Product Management
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Users
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('user_management') }}">
+        <i class="fa-solid fa-users-gear me-2">
+        </i>
+        User Management
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Models
+     </div>
+     <div class="accordion accordion-flush" id="modelAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingModel">
+        <button aria-controls="collapseModel" aria-expanded="true" class="accordion-button py-2" data-bs-target="#collapseModel" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-brain me-2">
+         </i>
+         Model Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingModel" class="accordion-collapse collapse show" data-bs-parent="#modelAccordion" id="collapseModel">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4 active" href="{{ url_for('model_management') }}">
+            <i class="fa-solid fa-brain me-2">
+            </i>
+            Models Overview
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('model_management') }}">
+            <i class="fa-solid fa-rocket me-2">
+            </i>
+            Train New Model
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Insights
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('forecast_dashboard') }}">
+        <i class="fa-solid fa-chart-line me-2">
+        </i>
+        Forecasts
+       </a>
+      </li>
+     </ul>
+    </nav>
+    <div class="mt-auto p-3 border-top small text-muted">
+     <div>
+      ©
+      <span id="year-admin">
+       2025
+      </span>
+      ACME Foods
+     </div>
+    </div>
+   </div>
+  </div>
+  <!-- Main Content -->
+  <main class="main-content container-fluid py-3">
+   <!-- Breadcrumbs -->
+   <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+     <li class="breadcrumb-item">
+      <a href="{{ url_for('admin_dashboard') }}">
+       Admin
+      </a>
+     </li>
+     <li aria-current="page" class="breadcrumb-item active">
+      Model Management
+     </li>
+    </ol>
+   </nav>
+   <!-- Page Header -->
+   <div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+     <h1 class="page-title mb-0">
+      Model Management
+     </h1>
+     <span class="badge-soft info">
+      <i class="fa-solid fa-brain me-1">
+      </i>
+      Manage training, activation and cleanup
+     </span>
+    </div>
+    <div class="view-switcher d-none d-md-inline-flex">
+     <div class="option active">
+      <i class="fa-solid fa-table me-1">
+      </i>
+      Table
+     </div>
+     <div class="option">
+      <i class="fa-solid fa-chart-column me-1">
+      </i>
+      Metrics
+     </div>
+    </div>
+   </div>
+   <!-- Alerts / Notifications area -->
+   <div class="mb-3" id="alertArea">
+   </div>
+   <!-- Summary Metrics -->
+   <div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
+     <div class="metric-card h-100">
+      <div class="metric-title">
+       Active Model
+      </div>
+      <div class="d-flex align-items-baseline gap-2">
+       <div class="metric-value" id="activeModelId">
+        —
+       </div>
+      </div>
+      <div class="text-muted small">
+       Used for current forecasts
+      </div>
+     </div>
+    </div>
+    <div class="col-12 col-md-4">
+     <div class="metric-card h-100">
+      <div class="metric-title">
+       Last Trained
+      </div>
+      <div class="metric-value" id="lastTrained">
+       —
+      </div>
+      <div class="text-muted small">
+       Most recent training job completion
+      </div>
+     </div>
+    </div>
+    <div class="col-12 col-md-4">
+     <div class="metric-card h-100">
+      <div class="metric-title">
+       Average MAE
+      </div>
+      <div class="metric-value" id="avgMae">
+       —
+      </div>
+      <div class="text-muted small">
+       Across all available models
+      </div>
+     </div>
+    </div>
+   </div>
+   <!-- Training Section -->
+   <section class="app-card mb-3" id="train">
+    <div class="card-header">
+     <div class="title d-flex align-items-center gap-2">
+      <i class="fa-solid fa-rocket text-secondary">
+      </i>
+      <span class="widget-title">
+       Train New Model
+      </span>
+     </div>
+     <div>
+      <button class="btn btn-primary" id="btnTrain">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train New Model
+      </button>
+     </div>
+    </div>
+    <div class="card-body">
+     <div class="d-none" id="trainingStatusWrap">
+      <div class="alert alert-info mb-0" id="trainingStatus" role="alert">
+       <i class="fa-solid fa-circle-notch fa-spin me-1">
+       </i>
+       Training in progress…
+      </div>
+     </div>
+     <div class="text-muted small mt-2" id="trainHelp">
+      Starts a background job using the latest aggregated dataset. You will be notified upon completion.
+     </div>
+    </div>
+   </section>
+   <!-- Models Table and Controls -->
+   <section class="app-card">
+    <div class="card-header flex-wrap gap-2">
+     <div class="title d-flex align-items-center gap-2">
+      <i class="fa-solid fa-table text-secondary">
+      </i>
+      <span class="widget-title">
+       Models Overview
+      </span>
+     </div>
+     <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+      <div class="input-group input-group-sm" style="max-width: 260px;">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input class="form-control" id="tableSearch" placeholder="Search by ID or date" type="search"/>
+      </div>
+      <select class="form-select form-select-sm" id="statusFilter" style="width: 160px;">
+       <option value="all">
+        All statuses
+       </option>
+       <option value="active">
+        Active
+       </option>
+       <option value="inactive">
+        Inactive
+       </option>
+      </select>
+      <select class="form-select form-select-sm" id="sortSelect" style="width: 200px;">
+       <option value="date_desc">
+        Sort: Training Date (newest)
+       </option>
+       <option value="date_asc">
+        Training Date (oldest)
+       </option>
+       <option value="mae_asc">
+        MAE (low to high)
+       </option>
+       <option value="mae_desc">
+        MAE (high to low)
+       </option>
+       <option value="r2_desc">
+        R-squared (high to low)
+       </option>
+       <option value="r2_asc">
+        R-squared (low to high)
+       </option>
+      </select>
+      <select class="form-select form-select-sm" id="pageSize" style="width: 120px;">
+       <option value="5">
+        Rows: 5
+       </option>
+       <option selected="" value="10">
+        Rows: 10
+       </option>
+       <option value="20">
+        Rows: 20
+       </option>
+      </select>
+     </div>
+    </div>
+    <div class="card-body p-0">
+     <div class="table-responsive">
+      <table class="table table-hover table-theme mb-0" id="modelsTable">
+       <thead>
+        <tr>
+         <th>
+          Model ID
+         </th>
+         <th>
+          Training Date
+         </th>
+         <th class="text-end">
+          MAE
+         </th>
+         <th class="text-end">
+          RMSE
+         </th>
+         <th class="text-end">
+          R-squared
+         </th>
+         <th>
+          Status
+         </th>
+         <th class="text-end">
+          Actions
+         </th>
+        </tr>
+       </thead>
+       <tbody id="modelsTbody">
+        <!-- Rows rendered by JS -->
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2 justify-content-between">
+     <div class="text-muted small" id="paginationInfo">
+      Showing 0–0 of 0
+     </div>
+     <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-light btn-sm" disabled="" id="prevPage">
+       <i class="fa-solid fa-angle-left">
+       </i>
+      </button>
+      <span class="small" id="pageIndicator">
+       Page 1 of 1
+      </span>
+      <button class="btn btn-light btn-sm" disabled="" id="nextPage">
+       <i class="fa-solid fa-angle-right">
+       </i>
+      </button>
+     </div>
+    </div>
+   </section>
+   <!-- Chart: MAE Comparison -->
+   <section class="app-card mt-3">
+    <div class="card-header">
+     <div class="title d-flex align-items-center gap-2">
+      <i class="fa-solid fa-chart-column text-secondary">
+      </i>
+      <span class="widget-title">
+       Model MAE Comparison
+      </span>
+     </div>
+    </div>
+    <div class="card-body">
+     <canvas aria-label="MAE comparison chart" height="120" id="maeChart" role="img">
+     </canvas>
+     <div class="text-muted small mt-2">
+      Hover to view details. Chart updates as models change.
+     </div>
+    </div>
+   </section>
+   <!-- Loading State Overlay -->
+   <div class="loading-overlay d-none" id="loadingOverlay">
+    <div aria-hidden="true" class="spinner-border text-primary" role="status">
+    </div>
+    <div class="mt-2">
+     Loading model data…
+    </div>
+   </div>
+  </main>
+  <!-- Footer (Admin) -->
+  <style>
+   .admin-footer { background:#fff; border-top:1px solid #e9ecef; }
+    .admin-footer a { color: var(--secondary); }
+    .admin-footer a:hover { color: #6f1e49; text-decoration: underline; }
+  </style>
+  <footer class="admin-footer py-3 mt-auto">
+   <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+     <img alt="Logo" onerror="this.onerror=null;this.src='https://picsum.photos/seed/footerlogo/20/20';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:20px;width:20px;border-radius:.25rem;"/>
+     <span class="text-muted small">
+      © 2025 ACME Foods
+     </span>
+    </div>
+    <div class="d-flex align-items-center gap-3 small">
+     <a class="text-decoration-none" href="{{ url_for('upload_page') }}">
+      <i class="fa-solid fa-file-arrow-up me-1">
+      </i>
+      Upload
+     </a>
+     <a class="text-decoration-none" href="{{ url_for('model_management') }}#train">
+      <i class="fa-solid fa-rocket me-1">
+      </i>
+      Train
+     </a>
+    </div>
+   </div>
+  </footer>
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js">
+  </script>
+  <!-- Page Script -->
+  <script>
+   // State
+let models = [];
+let filtered = [];
+let trainingStatus = 'idle';
+let currentPage = 1;
+let pageSize = 10;
+
+const els = {
+    yearAdmin: document.getElementById('year-admin'),
+    alertArea: document.getElementById('alertArea'),
+    btnTrain: document.getElementById('btnTrain'),
+    trainingStatusWrap: document.getElementById('trainingStatusWrap'),
+    trainingStatus: document.getElementById('trainingStatus'),
+    tableSearch: document.getElementById('tableSearch'),
+    statusFilter: document.getElementById('statusFilter'),
+    sortSelect: document.getElementById('sortSelect'),
+    pageSize: document.getElementById('pageSize'),
+    modelsTbody: document.getElementById('modelsTbody'),
+    paginationInfo: document.getElementById('paginationInfo'),
+    pageIndicator: document.getElementById('pageIndicator'),
+    prevPage: document.getElementById('prevPage'),
+    nextPage: document.getElementById('nextPage'),
+    loadingOverlay: document.getElementById('loadingOverlay'),
+    activeModelId: document.getElementById('activeModelId'),
+    lastTrained: document.getElementById('lastTrained'),
+    avgMae: document.getElementById('avgMae'),
+};
+
+let maeChart;
+
+function initChart() {
+    const ctx = document.getElementById('maeChart');
+    maeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'MAE',
+                data: [],
+                backgroundColor: 'rgba(240, 142, 27, 0.6)',
+                borderColor: 'rgba(240, 142, 27, 1)',
+                borderWidth: 1,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    enabled: true
+                },
+                legend: {
+                    display: false
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        autoSkip: true,
+                        maxRotation: 0
+                    }
+                },
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+}
+
+function updateChart() {
+    if (!maeChart) return;
+    const labels = models.map(m => m.model_id.replace('mdl_', ''));
+    const data = models.map(m => m.mae);
+    maeChart.data.labels = labels;
+    maeChart.data.datasets[0].data = data;
+    maeChart.update();
+}
+
+function setLoading(val) {
+    els.loadingOverlay.classList.toggle('d-none', !val);
+}
+
+function showAlert(message, type = 'info', timeout = 5000) {
+    const id = 'alert-' + Date.now();
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} alert-dismissible fade show`;
+    el.id = id;
+    el.role = 'alert';
+    el.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    els.alertArea.prepend(el);
+    if (timeout) setTimeout(() => {
+        const alert = bootstrap.Alert.getOrCreateInstance(document.getElementById(id));
+        alert.close();
+    }, timeout);
+}
+
+function formatNumber(n, digits = 2) {
+    return Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+    });
+}
+
+function computeSummary() {
+    const active = models.find(m => m.status === 'active');
+    els.activeModelId.textContent = active ? active.model_id : '—';
+    if (models.length) {
+        const latest = [...models].sort((a, b) => dayjs(b.training_date).valueOf() - dayjs(a.training_date).valueOf())[0];
+        els.lastTrained.textContent = dayjs(latest.training_date).format('YYYY-MM-DD HH:mm');
+        const avg = models.reduce((s, m) => s + m.mae, 0) / models.length;
+        els.avgMae.textContent = formatNumber(avg);
+    } else {
+        els.lastTrained.textContent = '—';
+        els.avgMae.textContent = '—';
+    }
+}
+
+function applyFilters() {
+    const q = els.tableSearch.value.trim().toLowerCase();
+    const status = els.statusFilter.value;
+    filtered = models.filter(m => {
+        const matchesQ = !q || m.model_id.toLowerCase().includes(q) || m.training_date.toLowerCase().includes(q);
+        const matchesS = status === 'all' || m.status === status;
+        return matchesQ && matchesS;
+    });
+    applySort();
+}
+
+function applySort() {
+    const val = els.sortSelect.value;
+    const sorters = {
+        'date_desc': (a, b) => dayjs(b.training_date).valueOf() - dayjs(a.training_date).valueOf(),
+        'date_asc': (a, b) => dayjs(a.training_date).valueOf() - dayjs(b.training_date).valueOf(),
+        'mae_asc': (a, b) => a.mae - b.mae,
+        'mae_desc': (a, b) => b.mae - a.mae,
+        'r2_desc': (a, b) => b.r_squared - a.r_squared,
+        'r2_asc': (a, b) => a.r_squared - b.r_squared,
+    };
+    filtered.sort(sorters[val] || sorters['date_desc']);
+    currentPage = 1;
+    renderTable();
+}
+
+function paginate(arr) {
+    const total = arr.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    currentPage = Math.min(currentPage, pages);
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, total);
+    const slice = arr.slice(start, end);
+    return {
+        slice,
+        total,
+        start: start + 1,
+        end
+    };
+}
+
+function renderTable() {
+    const {
+        slice,
+        total,
+        start,
+        end
+    } = paginate(filtered);
+    els.modelsTbody.innerHTML = slice.map(modelRow).join('');
+    els.paginationInfo.textContent = total ? `Showing ${start}–${end} of ${total}` : 'No results';
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    els.pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+    els.prevPage.disabled = currentPage <= 1;
+    els.nextPage.disabled = currentPage >= totalPages;
+}
+
+function modelRow(m) {
+    const badge = m.status === 'active' ?
+        '<span class="badge-soft success"><i class="fa-solid fa-circle-check me-1"></i> Active</span>' :
+        '<span class="badge-soft secondary"><i class="fa-regular fa-circle me-1"></i> Inactive</span>';
+    const disableActivate = m.status === 'active' ? 'disabled' : '';
+    return `
+        <tr>
+          <td class="fw-semibold">${m.model_id}</td>
+          <td>${dayjs(m.training_date).format('YYYY-MM-DD HH:mm')}</td>
+          <td class="text-end">${formatNumber(m.mae)}</td>
+          <td class="text-end">${formatNumber(m.rmse)}</td>
+          <td class="text-end">${formatNumber(m.r_squared, 3)}</td>
+          <td>${badge}</td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-success" data-action="activate" data-id="${m.model_id}" ${disableActivate}><i class="fa-solid fa-check me-1"></i> Activate</button>
+              <button class="btn btn-danger" data-action="delete" data-id="${m.model_id}"><i class="fa-solid fa-trash me-1"></i> Delete</button>
+            </div>
+          </td>
+        </tr>`;
+}
+
+function wireEvents() {
+    els.btnTrain.addEventListener('click', onTrainClick);
+    els.tableSearch.addEventListener('input', applyFilters);
+    els.statusFilter.addEventListener('change', applyFilters);
+    els.sortSelect.addEventListener('change', applySort);
+    els.pageSize.addEventListener('change', () => {
+        pageSize = Number(els.pageSize.value);
+        renderTable();
+    });
+    els.prevPage.addEventListener('click', () => {
+        currentPage = Math.max(1, currentPage - 1);
+        renderTable();
+    });
+    els.nextPage.addEventListener('click', () => {
+        currentPage = currentPage + 1;
+        renderTable();
+    });
+    document.getElementById('modelsTable').addEventListener('click', onTableClick);
+    document.getElementById('globalSearch').addEventListener('input', (e) => {
+        els.tableSearch.value = e.target.value;
+        applyFilters();
+    });
+}
+
+function setTrainingStatus(status, message) {
+    trainingStatus = status;
+    els.trainingStatusWrap.classList.remove('d-none');
+    let cls = 'alert-info';
+    let icon = '<i class="fa-solid fa-circle-info me-1"></i>';
+    if (status === 'in_progress') {
+        cls = 'alert-info';
+        icon = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i>';
+    }
+    if (status === 'success') {
+        cls = 'alert-success';
+        icon = '<i class="fa-solid fa-circle-check me-1"></i>';
+    }
+    if (status === 'error') {
+        cls = 'alert-danger';
+        icon = '<i class="fa-solid fa-triangle-exclamation me-1"></i>';
+    }
+    els.trainingStatus.className = `alert ${cls} mb-0`;
+    els.trainingStatus.innerHTML = `${icon} ${message}`;
+    els.btnTrain.disabled = (status === 'in_progress');
+    if (status === 'success' || status === 'error') {
+        setTimeout(() => {
+            els.trainingStatusWrap.classList.add('d-none');
+        }, 5000);
+    }
+}
+
+async function onTrainClick() {
+    if (trainingStatus === 'in_progress') return;
+    const res = await Swal.fire({
+        title: 'Start training?',
+        text: 'This will start a background job using the latest dataset.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Start',
+        cancelButtonText: 'Cancel'
+    });
+    if (!res.isConfirmed) return;
+    setTrainingStatus('in_progress', 'Training in progress…');
+    showAlert('<strong>Training started</strong>. You will be notified when it finishes.', 'info');
+    // Simulate training API call
+    setTimeout(() => {
+        const success = true; // flip for error path
+        if (success) {
+            const newModel = generateModel();
+            models.push(newModel);
+            applyFilters();
+            updateChart();
+            computeSummary();
+            setTrainingStatus('success', 'New model trained successfully!');
+            showAlert('New model trained successfully and added to the list.', 'success');
+        } else {
+            setTrainingStatus('error', 'Training failed. Please retry.');
+            showAlert('Training failed. Check logs and retry.', 'danger');
+        }
+    }, 2500);
+}
+
+function onTableClick(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const action = btn.getAttribute('data-action');
+    if (action === 'activate') handleActivate(id);
+    if (action === 'delete') handleDelete(id);
+}
+
+async function handleActivate(id) {
+    const model = models.find(m => m.model_id === id);
+    if (!model) return;
+    const res = await Swal.fire({
+        title: 'Activate this model?',
+        html: `<div class="text-start">\n          <div><strong>ID:</strong> ${model.model_id}</div>\n          <div><strong>MAE:</strong> ${formatNumber(model.mae)} | <strong>R2:</strong> ${formatNumber(model.r_squared,3)}</div>\n        </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Activate'
+    });
+    if (!res.isConfirmed) return;
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 600));
+    models.forEach(m => m.status = 'inactive');
+    model.status = 'active';
+    applyFilters();
+    computeSummary();
+    showAlert(`Model <strong>${model.model_id}</strong> is now active.`, 'success');
+}
+
+async function handleDelete(id) {
+    const model = models.find(m => m.model_id === id);
+    if (!model) return;
+    const res = await Swal.fire({
+        title: 'Delete model?',
+        html: `<div class="text-start">\n          <p class="mb-2">This action cannot be undone.</p>\n          <div><strong>ID:</strong> ${model.model_id}</div>\n          <div><strong>Status:</strong> ${model.status}</div>\n        </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Delete'
+    });
+    if (!res.isConfirmed) return;
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 600));
+    models = models.filter(m => m.model_id !== id);
+    applyFilters();
+    updateChart();
+    computeSummary();
+    showAlert(`Model <strong>${id}</strong> deleted.`, 'success');
+}
+
+function generateModel() {
+    const now = dayjs();
+    const id = 'mdl_' + now.format('YYYY_MM_DD_HHmmss');
+    const mae = +(100 + Math.random() * 80).toFixed(2);
+    const rmse = +(mae * (1 + Math.random() * 0.6)).toFixed(2);
+    const r2 = +(0.85 + Math.random() * 0.12).toFixed(3);
+    return {
+        model_id: id,
+        training_date: now.format('YYYY-MM-DD HH:mm:ss'),
+        mae,
+        rmse,
+        r_squared: r2,
+        status: 'inactive'
+    };
+}
+
+function seedData() {
+    models = [{
+        model_id: 'mdl_2025_01_15_1130',
+        training_date: '2025-01-15 11:30:00',
+        mae: 128.40,
+        rmse: 171.20,
+        r_squared: 0.913,
+        status: 'active'
+    }, {
+        model_id: 'mdl_2024_12_05_0912',
+        training_date: '2024-12-05 09:12:00',
+        mae: 139.85,
+        rmse: 183.51,
+        r_squared: 0.902,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_11_20_1645',
+        training_date: '2024-11-20 16:45:00',
+        mae: 148.22,
+        rmse: 195.33,
+        r_squared: 0.891,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_10_02_1015',
+        training_date: '2024-10-02 10:15:00',
+        mae: 152.91,
+        rmse: 201.02,
+        r_squared: 0.882,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_09_12_1420',
+        training_date: '2024-09-12 14:20:00',
+        mae: 167.44,
+        rmse: 219.77,
+        r_squared: 0.861,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_08_01_0905',
+        training_date: '2024-08-01 09:05:00',
+        mae: 174.12,
+        rmse: 228.90,
+        r_squared: 0.853,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_07_10_1302',
+        training_date: '2024-07-10 13:02:00',
+        mae: 162.77,
+        rmse: 213.11,
+        r_squared: 0.869,
+        status: 'inactive'
+    }, {
+        model_id: 'mdl_2024_06_18_1718',
+        training_date: '2024-06-18 17:18:00',
+        mae: 158.33,
+        rmse: 207.44,
+        r_squared: 0.876,
+        status: 'inactive'
+    }, ];
+}
+
+function init() {
+    // Year
+    const y = new Date().getFullYear();
+    const yEl = document.getElementById('year-admin');
+    if (yEl) yEl.textContent = y;
+
+    setLoading(true);
+    seedData();
+    initChart();
+    setTimeout(() => {
+        applyFilters();
+        updateChart();
+        computeSummary();
+        setLoading(false);
+    }, 800);
+
+    wireEvents();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+  </script>
+ </body>
+</html>

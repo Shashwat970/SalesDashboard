@@ -1,0 +1,43 @@
+/* Product Management Page Specific Styles */
+/* Use Poppins as primary font on this page */
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+/* Layout accommodation for persistent offcanvas sidebar on lg+ */
+@media (min-width: 992px) {
+    .admin-sidebar.offcanvas-lg {
+        width: 280px
+        }
+    .admin-sidebar.offcanvas-lg .offcanvas-body {
+        width: 100%
+        }
+    .admin-main {
+        margin-left: 280px
+        }
+    }
+/* Sortable header hover affordance */
+#productsTable thead th.sortable {
+    user-select: none
+    }
+#productsTable thead th.sortable:hover {
+    background: var(--neutral-soft)
+    }
+/* Tighten table cell spacing on small screens */
+@media (max-width: 575.98px) {
+    #productsTable td, #productsTable th {
+        padding: 10px 8px
+        }
+    }
+/* Ensure chart canvas scales nicely inside card */
+#categoryChart {
+    width: 100% !important;
+    height: auto !important
+    }
+/* System feedback spacing */
+#systemFeedback {
+    margin-top: 0.25rem
+    }
+/* Utility: make bottom bar not overlap footer spacing */
+.bottom-bar {
+    margin-bottom: 0.5rem
+    }

@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   User Management | Admin
+  </title>
+  <!-- Poppins font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <!-- Bootstrap 5 CSS -->
+  <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet"/>
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+   <!-- SweetAlert2 CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Global Theme Styles -->
+    <link href="style.css" rel="stylesheet"/>
+    <!-- Page specific CSS -->
+    <link href="user_management_page.css" rel="stylesheet"/>
+    <style>
+     body { font-family: 'Poppins', var(--font-sans); }
+    </style>
+   </link>
+  </link>
+ </head>
+ <body>
+  <!-- Header (Admin Navbar) -->
+  <style>
+   .admin-navbar { background-color: var(--primary); }
+    .admin-navbar .nav-link, .admin-navbar .navbar-brand, .admin-navbar .navbar-text { color:#fff; }
+    .admin-navbar .nav-link:hover { color:#212529; background: rgba(255,255,255,.2); border-radius:.375rem; }
+    .badge-dot { width:8px; height:8px; background:#dc3545; border-radius:50%; display:inline-block; margin-left:-6px; margin-top:-6px; position:absolute; }
+  </style>
+  <nav class="navbar navbar-expand-lg admin-navbar py-2">
+   <div class="container-fluid">
+    <button aria-controls="appSidebar" aria-label="Toggle sidebar" class="btn btn-light d-lg-none me-2" data-bs-target="#appSidebar" data-bs-toggle="offcanvas" type="button">
+     <i class="fa-solid fa-bars">
+     </i>
+    </button>
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+     <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/adminbrand/28/28';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:28px;width:28px;border-radius:.25rem;"/>
+     Admin
+    </a>
+    <div class="d-none d-lg-flex flex-grow-1 mx-3">
+     <form action="{{ url_for('admin_dashboard') }}" class="w-50" method="GET" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" name="q" placeholder="Search products, users, models…" type="search"/>
+      </div>
+     </form>
+    </div>
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-light btn-sm" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-1">
+       </i>
+       Upload Data
+      </a>
+     </li>
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-dark btn-sm" href="{{ url_for('model_management') }}#train" style="background-color: var(--secondary); border-color: var(--secondary);">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train Model
+      </a>
+     </li>
+     <li class="nav-item dropdown">
+      <a aria-expanded="false" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#" role="button">
+       <span class="avatar rounded-circle bg-dark d-inline-flex justify-content-center align-items-center me-2" style="width:28px;height:28px;">
+        <i class="fa-solid fa-user-gear text-white small">
+        </i>
+       </span>
+       <span class="d-none d-sm-inline" id="currentUserNameHeader">
+        {{currentUserName}}
+       </span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+       <li>
+        <h6 class="dropdown-header">
+         Admin
+        </h6>
+       </li>
+       <li>
+        <a class="dropdown-item" href="#">
+         <i class="fa-solid fa-gear me-2">
+         </i>
+         Settings
+        </a>
+       </li>
+       <li>
+        <hr class="dropdown-divider"/>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('login') }}">
+         <i class="fa-solid fa-right-from-bracket me-2">
+         </i>
+         Logout
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+  </nav>
+  <!-- Sidebar (Admin) -->
+  <style>
+   :root { --primary:#f08e1b; --secondary:#9a296a; }
+    .admin-sidebar .nav-link { color:#333; border-radius:.375rem; }
+    .admin-sidebar .nav-link:hover { background:rgba(240,142,27,.12); color:var(--secondary); }
+    .admin-sidebar .nav-link.active { background:rgba(240,142,27,.18); color:#000; border-left:4px solid var(--primary); }
+    .admin-sidebar .section-title { font-size:.75rem; color:#6c757d; text-transform:uppercase; letter-spacing:.08em; margin:1rem 0 .25rem; }
+    .admin-sidebar .profile { background:linear-gradient(90deg, rgba(240,142,27,.08), rgba(154,41,106,.08)); border-radius:.5rem; }
+  </style>
+  <div aria-labelledby="appSidebarLabel" class="offcanvas offcanvas-start offcanvas-lg admin-sidebar" id="appSidebar" tabindex="-1">
+   <div class="offcanvas-header d-lg-none">
+    <h5 class="offcanvas-title" id="appSidebarLabel">
+     Admin Navigation
+    </h5>
+    <button aria-label="Close" class="btn-close text-reset" data-bs-dismiss="offcanvas" type="button">
+    </button>
+   </div>
+   <div class="offcanvas-body p-0 d-flex flex-column">
+    <div class="p-3 border-bottom">
+     <a class="d-flex align-items-center text-decoration-none" href="{{ url_for('admin_dashboard') }}">
+      <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/sidelogo/32/32';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:32px;width:32px;object-fit:cover;border-radius:.25rem;"/>
+      <span class="fw-semibold" style="color:var(--secondary)">
+       Sales Forecasting Admin
+      </span>
+     </a>
+    </div>
+    <div class="p-3 profile d-flex align-items-center gap-2">
+     <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width:40px;height:40px;background-color: var(--secondary) !important; color:#fff;">
+      <i class="fa-solid fa-user">
+      </i>
+     </div>
+     <div>
+      <div class="fw-semibold" id="currentUserNameSidebar">
+       {{currentUserName}}
+      </div>
+      <div class="text-muted small">
+       Admin
+      </div>
+     </div>
+    </div>
+    <nav class="px-2 py-2 sidebar-nav">
+     <div class="section-title px-2">
+      Overview
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+        <i class="fa-solid fa-gauge me-2">
+        </i>
+        Dashboard
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Data
+     </div>
+     <div class="accordion accordion-flush" id="dataAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingData">
+        <button aria-controls="collapseData" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseData" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-database me-2">
+         </i>
+         Data Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingData" class="accordion-collapse collapse" data-bs-parent="#dataAccordion" id="collapseData">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('upload_page') }}">
+            <i class="fa-solid fa-file-arrow-up me-2">
+            </i>
+            Upload Data
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('product_management') }}">
+            <i class="fa-solid fa-boxes-stacked me-2">
+            </i>
+            Product Management
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Users
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center active" href="{{ url_for('user_management') }}">
+        <i class="fa-solid fa-users-gear me-2">
+        </i>
+        User Management
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Models
+     </div>
+     <div class="accordion accordion-flush" id="modelAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingModel">
+        <button aria-controls="collapseModel" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseModel" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-brain me-2">
+         </i>
+         Model Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingModel" class="accordion-collapse collapse" data-bs-parent="#modelAccordion" id="collapseModel">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('model_management') }}">
+            <i class="fa-solid fa-brain me-2">
+            </i>
+            Models Overview
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('model_management') }}#train">
+            <i class="fa-solid fa-rocket me-2">
+            </i>
+            Train New Model
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Insights
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('forecast_dashboard') }}">
+        <i class="fa-solid fa-chart-line me-2">
+        </i>
+        Forecasts
+       </a>
+      </li>
+     </ul>
+    </nav>
+    <div class="mt-auto p-3 border-top small text-muted">
+     <div>
+      ©
+      <span id="year-admin">
+       2025
+      </span>
+      ACME Foods
+     </div>
+    </div>
+   </div>
+  </div>
+  <!-- Main Content -->
+  <main class="container-fluid with-admin-sidebar py-3">
+   <!-- Breadcrumb -->
+   <nav aria-label="breadcrumb" class="breadcrumb">
+    <ol class="breadcrumb mb-2">
+     <li class="breadcrumb-item">
+      <a href="{{ url_for('admin_dashboard') }}">
+       Admin
+      </a>
+     </li>
+     <li aria-current="page" class="breadcrumb-item active">
+      User Management
+     </li>
+    </ol>
+   </nav>
+   <!-- Page header -->
+   <div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+     <h1 class="page-title mb-0">
+      User Management
+     </h1>
+     <span class="badge-soft info">
+      <i class="fa-solid fa-users-gear me-1">
+      </i>
+      Manage Users
+     </span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+     <button class="btn btn-light d-none d-sm-inline-flex" id="btnExportCsv">
+      <i class="fa-solid fa-file-export me-2">
+      </i>
+      Export CSV
+     </button>
+     <button class="btn btn-primary" id="btnAddUser">
+      <i class="fa-solid fa-user-plus me-2">
+      </i>
+      Add New User
+     </button>
+    </div>
+   </div>
+   <!-- Filters and Metrics -->
+   <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-8">
+     <div class="card h-100">
+      <div class="card-header">
+       <div class="d-flex align-items-center w-100 gap-2 flex-wrap">
+        <div class="input-group" style="max-width: 360px;">
+         <span class="input-group-text">
+          <i class="fa-solid fa-magnifying-glass">
+          </i>
+         </span>
+         <input class="form-control" id="searchInput" placeholder="Search username…" type="text"/>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+         <label class="form-label mb-0 me-1" for="roleFilter">
+          Role
+         </label>
+         <select class="form-select" id="roleFilter" style="min-width: 160px;">
+          <option selected="" value="all">
+           All Roles
+          </option>
+          <option value="admin">
+           Admin
+          </option>
+          <option value="user">
+           User
+          </option>
+         </select>
+         <button class="btn btn-light" id="btnResetFilters">
+          <i class="fa-solid fa-rotate me-1">
+          </i>
+          Reset
+         </button>
+        </div>
+       </div>
+      </div>
+      <div class="card-body">
+       <div class="grid auto-fit-sm">
+        <div class="metric-card text-center">
+         <div class="metric-title">
+          Total Users
+         </div>
+         <div class="metric-value" id="statTotal">
+          0
+         </div>
+        </div>
+        <div class="metric-card text-center">
+         <div class="metric-title">
+          Admins
+         </div>
+         <div class="metric-value highlight-info" id="statAdmins">
+          0
+         </div>
+        </div>
+        <div class="metric-card text-center">
+         <div class="metric-title">
+          Standard Users
+         </div>
+         <div class="metric-value text-secondary" id="statUsers">
+          0
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="col-12 col-lg-4">
+     <div class="card h-100">
+      <div class="card-header">
+       <span class="widget-title">
+        <i class="fa-solid fa-chart-pie me-2">
+        </i>
+        User Roles
+       </span>
+      </div>
+      <div class="card-body d-flex align-items-center justify-content-center">
+       <canvas aria-label="Role distribution chart" height="160" id="rolesChart">
+       </canvas>
+      </div>
+     </div>
+    </div>
+   </div>
+   <!-- User List Table -->
+   <div class="card">
+    <div class="card-header">
+     <div class="d-flex align-items-center justify-content-between w-100">
+      <span class="widget-title">
+       All Users
+      </span>
+      <div class="d-none text-muted small" id="loadingSpinner">
+       <span aria-hidden="true" class="spinner-border spinner-border-sm me-2" role="status">
+       </span>
+       Loading…
+      </div>
+     </div>
+    </div>
+    <div class="card-body p-0">
+     <div class="table-responsive">
+      <table class="table table-theme mb-0" id="usersTable">
+       <thead>
+        <tr>
+         <th class="sortable" data-sort="username" scope="col">
+          Username
+          <i class="fa-solid fa-sort ms-1">
+          </i>
+         </th>
+         <th class="sortable" data-sort="role" scope="col">
+          Role
+          <i class="fa-solid fa-sort ms-1">
+          </i>
+         </th>
+         <th class="sortable" data-sort="createdAt" scope="col">
+          Created
+          <i class="fa-solid fa-sort ms-1">
+          </i>
+         </th>
+         <th class="sortable" data-sort="lastLogin" scope="col">
+          Last Login
+          <i class="fa-solid fa-sort ms-1">
+          </i>
+         </th>
+         <th class="text-end" scope="col" style="width:140px;">
+          Actions
+         </th>
+        </tr>
+       </thead>
+       <tbody id="usersTbody">
+        <!-- Rows injected by JS -->
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+     <div class="text-muted small" id="paginationInfo">
+      Showing 0 to 0 of 0 entries
+     </div>
+     <nav aria-label="Users pagination">
+      <ul class="pagination pagination-sm mb-0" id="pagination">
+       <!-- Pagination injected by JS -->
+      </ul>
+     </nav>
+    </div>
+   </div>
+  </main>
+  <!-- Footer -->
+  <style>
+   .admin-footer { background:#fff; border-top:1px solid #e9ecef; }
+    .admin-footer a { color: var(--secondary); }
+    .admin-footer a:hover { color: #6f1e49; text-decoration: underline; }
+  </style>
+  <footer class="admin-footer py-3 mt-auto with-admin-sidebar">
+   <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+     <img alt="Logo" onerror="this.onerror=null;this.src='https://picsum.photos/seed/footerlogo/20/20';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:20px;width:20px;border-radius:.25rem;"/>
+     <span class="text-muted small">
+      ©
+      <span id="footerYear">
+       2025
+      </span>
+      ACME Foods
+     </span>
+    </div>
+    <div class="d-flex align-items-center gap-3 small">
+     <a href="#">
+      Terms
+     </a>
+     <a href="#">
+      Privacy
+     </a>
+     <span class="text-muted">
+      |
+     </span>
+     <a class="text-decoration-none" href="{{ url_for('upload_page') }}">
+      <i class="fa-solid fa-file-arrow-up me-1">
+      </i>
+      Upload
+     </a>
+     <a class="text-decoration-none" href="{{ url_for('model_management') }}#train">
+      <i class="fa-solid fa-rocket me-1">
+      </i>
+      Train
+     </a>
+    </div>
+   </div>
+  </footer>
+  <!-- Add/Edit User Modal (Bootstrap) -->
+  <div aria-hidden="true" aria-labelledby="addEditUserLabel" class="modal fade" id="addEditUserModal" tabindex="-1">
+   <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content">
+     <div class="modal-header">
+      <h5 class="modal-title" id="addEditUserLabel">
+       Add New User
+      </h5>
+      <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button">
+      </button>
+     </div>
+     <form id="userForm" novalidate="">
+      <div class="modal-body">
+       <div class="mb-3">
+        <label class="form-label" for="usernameInput">
+         Username
+        </label>
+        <input class="form-control" id="usernameInput" required="" type="text"/>
+        <div class="form-text">
+         Must be unique and not empty.
+        </div>
+        <div class="invalid-feedback">
+         Please enter a unique username.
+        </div>
+       </div>
+       <div class="mb-3">
+        <label class="form-label" for="passwordInput">
+         Password
+        </label>
+        <input class="form-control" id="passwordInput" placeholder="Leave blank to keep current password" type="password"/>
+        <div class="form-text" id="passwordHelp">
+         Required for new users. Optional when editing.
+        </div>
+        <div class="invalid-feedback">
+         Password is required when creating a new user.
+        </div>
+       </div>
+       <div class="mb-2">
+        <label class="form-label" for="roleSelect">
+         Role
+        </label>
+        <select class="form-select" id="roleSelect" required="">
+         <option disabled="" selected="" value="">
+          Select a role
+         </option>
+         <option value="admin">
+          Admin
+         </option>
+         <option value="user">
+          User
+         </option>
+        </select>
+        <div class="invalid-feedback">
+         Please select a role.
+        </div>
+       </div>
+       <input id="userIdHidden" type="hidden">
+       </input>
+      </div>
+      <div class="modal-footer">
+       <button class="btn btn-light" data-bs-dismiss="modal" type="button">
+        Cancel
+       </button>
+       <button class="btn btn-primary" disabled="" id="saveUserBtn" type="submit">
+        <span class="save-text">
+         Save
+        </span>
+        <span aria-hidden="true" class="spinner-border spinner-border-sm ms-2 d-none" id="savingSpinner" role="status">
+        </span>
+       </button>
+      </div>
+     </form>
+    </div>
+   </div>
+  </div>
+  <!-- Toast Container (for system feedback) -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: var(--z-toast);">
+   <div id="toastContainer">
+   </div>
+  </div>
+  <!-- Required JS -->
+  <script crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js">
+  </script>
+  <script>
+   // App State
+const state = {
+    users: [],
+    filtered: [],
+    sortColumn: 'username',
+    sortDirection: 'asc',
+    currentPage: 1,
+    pageSize: 5,
+    modalMode: 'add', // 'add' | 'edit'
+    isLoading: true,
+    currentUserName: 'Alice Admin'
+};
+
+// Mock fetch users
+function fetchUsers() {
+    state.isLoading = true;
+    document.getElementById('loadingSpinner').classList.remove('d-none');
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const data = [{
+                id: 1,
+                username: 'alice',
+                role: 'admin',
+                createdAt: '2024-01-15',
+                lastLogin: '2025-08-19 09:24'
+            }, {
+                id: 2,
+                username: 'bob',
+                role: 'user',
+                createdAt: '2024-02-03',
+                lastLogin: '2025-08-18 18:12'
+            }, {
+                id: 3,
+                username: 'carol',
+                role: 'user',
+                createdAt: '2024-05-21',
+                lastLogin: '2025-08-17 07:56'
+            }, {
+                id: 4,
+                username: 'dave',
+                role: 'admin',
+                createdAt: '2023-12-30',
+                lastLogin: '2025-08-08 15:05'
+            }, {
+                id: 5,
+                username: 'erin',
+                role: 'user',
+                createdAt: '2024-07-02',
+                lastLogin: '2025-08-16 12:44'
+            }, {
+                id: 6,
+                username: 'frank',
+                role: 'user',
+                createdAt: '2024-03-12',
+                lastLogin: '2025-08-15 21:27'
+            }, {
+                id: 7,
+                username: 'grace',
+                role: 'admin',
+                createdAt: '2023-11-05',
+                lastLogin: '2025-08-13 10:09'
+            }, {
+                id: 8,
+                username: 'heidi',
+                role: 'user',
+                createdAt: '2024-01-22',
+                lastLogin: '2025-08-18 14:35'
+            }, ];
+            resolve(data);
+        }, 700);
+    });
+}
+
+// Utilities
+function formatDate(dateStr) {
+    // Expecting YYYY-MM-DD or YYYY-MM-DD HH:mm
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit'
+    });
+}
+
+function formatDateTime(dateStr) {
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function compare(a, b, col, dir) {
+    const mult = dir === 'asc' ? 1 : -1;
+    if (col === 'createdAt' || col === 'lastLogin') {
+        const va = new Date((a[col] + '').replace(' ', 'T')).getTime();
+        const vb = new Date((b[col] + '').replace(' ', 'T')).getTime();
+        return (va - vb) * mult;
+    }
+    return (('' + a[col]).localeCompare(('' + b[col]), undefined, {
+        sensitivity: 'base'
+    })) * mult;
+}
+
+// Rendering
+function renderStats() {
+    const total = state.users.length;
+    const admins = state.users.filter(u => u.role === 'admin').length;
+    const users = total - admins;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statAdmins').textContent = admins;
+    document.getElementById('statUsers').textContent = users;
+    updateRolesChart(admins, users);
+}
+
+function applyFilters() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    state.filtered = state.users.filter(u => {
+        const matchQ = !q || u.username.toLowerCase().includes(q);
+        const matchR = role === 'all' || u.role === role;
+        return matchQ && matchR;
+    });
+    state.currentPage = 1;
+    renderTable();
+}
+
+function renderTable() {
+    // Sort
+    const sorted = [...state.filtered].sort((a, b) => compare(a, b, state.sortColumn, state.sortDirection));
+    // Paginate
+    const total = sorted.length;
+    const startIdx = (state.currentPage - 1) * state.pageSize;
+    const pageItems = sorted.slice(startIdx, startIdx + state.pageSize);
+    const tbody = document.getElementById('usersTbody');
+    tbody.innerHTML = '';
+
+    if (state.isLoading) {
+        // skeleton rows
+        for (let i = 0; i < 5; i++) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td><span class="skeleton" style="height:16px"></span></td>
+            <td><span class="skeleton" style="height:16px"></span></td>
+            <td><span class="skeleton" style="height:16px;width:120px"></span></td>
+            <td><span class="skeleton" style="height:16px;width:160px"></span></td>
+            <td class="text-end"><span class="skeleton" style="height:28px;width:120px;display:inline-block;border-radius:6px"></span></td>`;
+            tbody.appendChild(tr);
+        }
+    } else {
+        for (const u of pageItems) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td class="align-middle fw-semibold text-strong">${escapeHtml(u.username)}</td>
+            <td class="align-middle">${roleBadge(u.role)}</td>
+            <td class="align-middle">${formatDate(u.createdAt)}</td>
+            <td class="align-middle">${formatDateTime(u.lastLogin)}</td>
+            <td class="align-middle text-end">
+              <button class="btn btn-light btn-sm me-1" data-action="edit" data-id="${u.id}"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+              <button class="btn btn-danger btn-sm" data-action="delete" data-id="${u.id}"><i class="fa-solid fa-trash me-1"></i>Delete</button>
+            </td>`;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Pagination info
+    const start = total ? startIdx + 1 : 0;
+    const end = Math.min(startIdx + state.pageSize, total);
+    document.getElementById('paginationInfo').textContent = `Showing ${start} to ${end} of ${total} entries`;
+    renderPagination(total);
+    updateSortIcons();
+}
+
+function renderPagination(total) {
+    const totalPages = Math.ceil(total / state.pageSize) || 1;
+    const ul = document.getElementById('pagination');
+    ul.innerHTML = '';
+    const createItem = (label, page, disabled = false, active = false) => {
+        const li = document.createElement('li');
+        li.className = `page-item ${disabled ? 'disabled':''} ${active ? 'active':''}`;
+        li.innerHTML = `<a class="page-link" href="#" data-page="${page}">${label}</a>`;
+        return li;
+    };
+    ul.appendChild(createItem('«', state.currentPage - 1, state.currentPage === 1));
+    for (let p = 1; p <= totalPages; p++) {
+        ul.appendChild(createItem(p, p, false, p === state.currentPage));
+    }
+    ul.appendChild(createItem('»', state.currentPage + 1, state.currentPage === totalPages));
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('#usersTable thead th.sortable').forEach(th => {
+        const icon = th.querySelector('i');
+        icon.classList.remove('fa-sort-up', 'fa-sort-down');
+        icon.classList.add('fa-sort');
+        if (th.dataset.sort === state.sortColumn) {
+            icon.classList.remove('fa-sort');
+            icon.classList.add(state.sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+        }
+    });
+}
+
+// Helpers
+function roleBadge(role) {
+    if (role === 'admin') return '<span class="badge-soft secondary"><i class="fa-solid fa-shield-halved me-1"></i>Admin</span>';
+    return '<span class="badge-soft primary"><i class="fa-solid fa-user me-1"></i>User</span>';
+}
+
+function escapeHtml(str) {
+    return (str + '').replace(/[&<>"]+/g, s => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;'
+    } [s]));
+}
+
+// Modal logic
+let addEditModal;
+
+function openAddModal() {
+    state.modalMode = 'add';
+    document.getElementById('addEditUserLabel').textContent = 'Add New User';
+    document.getElementById('userIdHidden').value = '';
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('roleSelect').value = '';
+    setPasswordRequired(true);
+    updateSaveButtonDisabled();
+    addEditModal.show();
+}
+
+function openEditModal(id) {
+    const u = state.users.find(x => x.id == id);
+    if (!u) return;
+    state.modalMode = 'edit';
+    document.getElementById('addEditUserLabel').textContent = `Edit User`;
+    document.getElementById('userIdHidden').value = u.id;
+    document.getElementById('usernameInput').value = u.username;
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('roleSelect').value = u.role;
+    setPasswordRequired(false);
+    updateSaveButtonDisabled();
+    addEditModal.show();
+}
+
+function setPasswordRequired(isRequired) {
+    const pwd = document.getElementById('passwordInput');
+    pwd.required = isRequired;
+    document.getElementById('passwordHelp').textContent = isRequired ? 'Required for new users.' : 'Optional when editing. Leave blank to keep current password.';
+}
+
+function onSaveUser(e) {
+    e.preventDefault();
+    const id = document.getElementById('userIdHidden').value;
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    const role = document.getElementById('roleSelect').value;
+
+    // Client-side validation
+    let valid = true;
+    // Username unique
+    const exists = state.users.some(u => u.username.toLowerCase() === username.toLowerCase() && (state.modalMode === 'add' || (state.modalMode === 'edit' && u.id != id)));
+    const usernameEl = document.getElementById('usernameInput');
+    if (!username || exists) {
+        usernameEl.classList.add('is-invalid');
+        valid = false;
+    } else {
+        usernameEl.classList.remove('is-invalid');
+    }
+
+    const pwdEl = document.getElementById('passwordInput');
+    if (state.modalMode === 'add' && !password) {
+        pwdEl.classList.add('is-invalid');
+        valid = false;
+    } else {
+        pwdEl.classList.remove('is-invalid');
+    }
+
+    const roleEl = document.getElementById('roleSelect');
+    if (!role) {
+        roleEl.classList.add('is-invalid');
+        valid = false;
+    } else {
+        roleEl.classList.remove('is-invalid');
+    }
+
+    if (!valid) {
+        return;
+    }
+
+    // Simulate saving
+    document.getElementById('savingSpinner').classList.remove('d-none');
+    document.getElementById('saveUserBtn').disabled = true;
+
+    setTimeout(() => {
+        if (state.modalMode === 'add') {
+            const newId = Math.max(0, ...state.users.map(u => u.id)) + 1;
+            state.users.push({
+                id: newId,
+                username,
+                role,
+                createdAt: new Date().toISOString().slice(0, 10),
+                lastLogin: new Date().toISOString().slice(0, 16).replace('T', ' ')
+            });
+            showSuccess(`User '${username}' created.`);
+        } else {
+            const idx = state.users.findIndex(u => u.id == id);
+            if (idx > -1) {
+                state.users[idx].username = username;
+                state.users[idx].role = role;
+                showSuccess(`User '${username}' updated.`);
+            }
+        }
+        addEditModal.hide();
+        document.getElementById('savingSpinner').classList.add('d-none');
+        document.getElementById('saveUserBtn').disabled = false;
+        renderStats();
+        applyFilters();
+    }, 600);
+}
+
+function confirmDeleteUser(id) {
+    const u = state.users.find(x => x.id == id);
+    if (!u) return;
+    Swal.fire({
+        title: 'Delete User',
+        html: `Are you sure you want to delete user <strong>${escapeHtml(u.username)}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Confirm Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#CD2026'
+    }).then(res => {
+        if (res.isConfirmed) {
+            // Simulate API delete
+            setTimeout(() => {
+                state.users = state.users.filter(x => x.id != id);
+                renderStats();
+                applyFilters();
+                showSuccess(`User '${u.username}' deleted.`);
+            }, 300);
+        }
+    });
+}
+
+function updateSaveButtonDisabled() {
+    const mode = state.modalMode;
+    const username = document.getElementById('usernameInput').value.trim();
+    const role = document.getElementById('roleSelect').value;
+    const pwd = document.getElementById('passwordInput').value;
+    const disabled = !username || !role || (mode === 'add' && !pwd);
+    document.getElementById('saveUserBtn').disabled = disabled;
+}
+
+// Toasts / Alerts
+function showSuccess(message) {
+    // SweetAlert for visible success
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: message,
+        showConfirmButton: false,
+        timer: 1800,
+        timerProgressBar: true
+    });
+}
+
+// Sorting click
+function onHeaderClick(e) {
+    const th = e.target.closest('th.sortable');
+    if (!th) return;
+    const col = th.dataset.sort;
+    if (state.sortColumn === col) {
+        state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        state.sortColumn = col;
+        state.sortDirection = 'asc';
+    }
+    renderTable();
+}
+
+// Pagination click
+function onPaginationClick(e) {
+    const a = e.target.closest('a.page-link');
+    if (!a) return;
+    e.preventDefault();
+    const page = parseInt(a.dataset.page, 10);
+    const totalPages = Math.ceil(state.filtered.length / state.pageSize) || 1;
+    if (page >= 1 && page <= totalPages) {
+        state.currentPage = page;
+        renderTable();
+    }
+}
+
+// Export CSV
+function exportCsv() {
+    const headers = ['ID', 'Username', 'Role', 'Created', 'Last Login'];
+    const rows = state.filtered.map(u => [u.id, u.username, u.role, u.createdAt, u.lastLogin]);
+    const csv = [headers, ...rows].map(r => r.map(x => '"' + (('' + x).replaceAll('"', '""')) + '"').join(',')).join('\n');
+    const blob = new Blob([csv], {
+        type: 'text/csv;charset=utf-8;'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Chart.js doughnut
+let rolesChart;
+
+function initRolesChart() {
+    const ctx = document.getElementById('rolesChart');
+    rolesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Admins', 'Users'],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ['#9a296a', 'rgba(240,142,27,0.85)'],
+                hoverBackgroundColor: ['#7b2054', '#d87f18'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function updateRolesChart(admins, users) {
+    if (!rolesChart) return;
+    rolesChart.data.datasets[0].data = [admins, users];
+    rolesChart.update();
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', async () => {
+    // Dynamic names and years
+    document.getElementById('currentUserNameHeader').textContent = state.currentUserName;
+    document.getElementById('currentUserNameSidebar').textContent = state.currentUserName;
+    const y = new Date().getFullYear();
+    const yAdmin = document.getElementById('year-admin');
+    if (yAdmin) yAdmin.textContent = y;
+    const yFoot = document.getElementById('footerYear');
+    if (yFoot) yFoot.textContent = y;
+
+    // Initialize modal
+    addEditModal = new bootstrap.Modal(document.getElementById('addEditUserModal'));
+
+    // Init chart
+    initRolesChart();
+
+    // Fetch users
+    state.users = await fetchUsers();
+    state.isLoading = false;
+    document.getElementById('loadingSpinner').classList.add('d-none');
+    renderStats();
+    state.filtered = [...state.users];
+    renderTable();
+
+    // Events
+    document.getElementById('usersTable').querySelector('thead').addEventListener('click', onHeaderClick);
+    document.getElementById('pagination').addEventListener('click', onPaginationClick);
+    document.getElementById('btnAddUser').addEventListener('click', openAddModal);
+    document.getElementById('btnResetFilters').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('roleFilter').value = 'all';
+        applyFilters();
+    });
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('roleFilter').addEventListener('change', applyFilters);
+    document.getElementById('btnExportCsv').addEventListener('click', exportCsv);
+
+    // Delegate actions
+    document.getElementById('usersTbody').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        if (btn.dataset.action === 'edit') openEditModal(id);
+        if (btn.dataset.action === 'delete') confirmDeleteUser(id);
+    });
+
+    // Form events for validation
+    document.getElementById('usernameInput').addEventListener('input', updateSaveButtonDisabled);
+    document.getElementById('passwordInput').addEventListener('input', updateSaveButtonDisabled);
+    document.getElementById('roleSelect').addEventListener('change', updateSaveButtonDisabled);
+    document.getElementById('userForm').addEventListener('submit', onSaveUser);
+});
+  </script>
+ </body>
+</html>

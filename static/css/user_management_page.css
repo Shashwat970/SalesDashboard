@@ -1,0 +1,45 @@
+/* user_management_page.css - page-specific styles */
+/* Sidebar width and main content offset for large screens */
+@media (min-width: 992px) {
+    .admin-sidebar.offcanvas-lg {
+        width: 260px !important;
+        border-right: 1px solid var(--divider-color)
+        }
+    .with-admin-sidebar {
+        margin-left: 260px
+        }
+    }
+/* Sortable headers */
+#usersTable thead th.sortable {
+    cursor: pointer;
+    user-select: none
+    }
+#usersTable thead th.sortable i {
+    color: var(--text-muted)
+    }
+#usersTable thead th.sortable:hover {
+    background: var(--neutral-soft)
+    }
+/* Tighten actions column */
+#usersTable td.text-end .btn {
+    min-width: 70px
+    }
+/* Chart container height */
+#rolesChart {
+    max-height: 220px
+    }
+/* Modal form tweaks */
+#addEditUserModal .modal-content {
+    border-radius: var(--radius-2)
+    }
+#addEditUserModal .modal-header {
+    background: var(--surface-muted)
+    }
+/* Filters section spacing */
+.page-header .btn {
+    white-space: nowrap
+    }
+/* Toast/Swal z-index to appear above offcanvas */
+.swal2-container {
+    z-index: calc(var(--z-toast) + 5) !important
+    }

@@ -1,0 +1,53 @@
+/* login_page.css - Page-specific styles for Login Page */
+/* Use Poppins on this page while respecting the base theme */
+:root {
+    --login-card-max: 520px
+    }
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+.auth-hero {
+    min-height: 60vh
+    }
+.logo-holder {
+    width: 64px;
+    height: 64px;
+    object-fit: cover
+    }
+/* Tweak the existing auth shell card spacing on small screens */
+.login-form-container {
+    max-width: var(--login-card-max);
+    margin: 0 auto
+    }
+/* Caps lock indicator emphasis */
+#capsLockIndicator {
+    font-weight: 500
+    }
+/* Test accounts card subtle background separators */
+.card .badge.bg-primary-soft, .badge.bg-primary-soft {
+    background: var(--primary-soft) !important
+    }
+.badge.bg-info-soft {
+    background: var(--info-soft) !important
+    }
+/* Button loading state smoothness */
+#loginBtn {
+    transition: background-color 0.15s ease, opacity 0.15s ease
+    }
+#loginBtn[disabled] {
+    opacity: 0.85
+    }
+/* Make code blocks for credentials readable */
+code {
+    background: var(--neutral-soft);
+    color: var(--text-strong);
+    padding: 2px 6px;
+    border-radius: 4px
+    }
+/* Responsive spacing adjustments */
+@media (max-width: 575.98px) {
+    .auth-hero {
+        padding-top: 1.25rem;
+        padding-bottom: 2rem
+        }
+    }

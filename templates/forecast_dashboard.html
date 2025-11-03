@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Sales Forecasts Dashboard
+  </title>
+  <!-- Brand font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.min.css" rel="stylesheet"/>
+  <!-- Global Theme CSS -->
+  <link href="style.css" rel="stylesheet"/>
+  <!-- Page specific CSS -->
+  <link href="forecast_dashboard.css" rel="stylesheet"/>
+ </head>
+ <body class="d-flex flex-column min-vh-100">
+  <!-- Header (User Navbar) -->
+  <!-- USER COMPONENT: Header (Role: User) -->
+  <style>
+   .user-navbar { background-color: var(--primary); }
+    .user-navbar .nav-link, .user-navbar .navbar-brand { color:#fff; }
+    .user-navbar .nav-link:hover { color:#212529; background: rgba(255,255,255,.2); border-radius:.375rem; }
+  </style>
+  <nav class="navbar navbar-expand-lg user-navbar py-2 sticky-top">
+   <div class="container-fluid">
+    <button aria-controls="appSidebar" aria-label="Toggle sidebar" class="btn btn-light d-lg-none me-2" data-bs-target="#appSidebar" data-bs-toggle="offcanvas" type="button">
+     <i class="fa-solid fa-bars">
+     </i>
+    </button>
+    <a class="navbar-brand d-flex align-items-center" href="./forecast_dashboard.html">
+     <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/brand/28/28'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:28px;width:28px;border-radius:.25rem;"/>
+     Forecasts
+    </a>
+    <div class="d-none d-lg-flex flex-grow-1 mx-3">
+     <form action="./forecast_dashboard.html" class="w-50" method="GET" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" name="product" placeholder="Search product…" type="search"/>
+      </div>
+     </form>
+    </div>
+
+      <a aria-expanded="false" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#" role="button">
+       <span class="avatar rounded-circle bg-dark d-inline-flex justify-content-center align-items-center me-2" style="width:28px;height:28px;">
+        <i class="fa-solid fa-user text-white small">
+        </i>
+       </span>
+       <span class="d-none d-sm-inline" id="currentUserName">
+        Alex Planner
+       </span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+       <li>
+        <a class="dropdown-item" href="./user_management_page.html">
+         <i class="fa-solid fa-user me-2">
+         </i>
+         Profile
+        </a>
+       </li>
+       <li>
+        <hr class="dropdown-divider"/>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('logout') }}">
+         <i class="fa-solid fa-right-from-bracket me-2">
+         </i>
+         Logout
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+  </nav>
+  <!-- Sidebar (User) -->
+  <!-- USER COMPONENT: Sidebar (Role: User) -->
+  <style>
+   :root { --primary:#6d83e1; --secondary:#9a296a; }
+    .user-sidebar .nav-link { color:#c76464; border-radius:.375rem; }
+    .user-sidebar .nav-link:hover { background:rgba(240,142,27,.12); color:var(--secondary); }
+    .user-sidebar .nav-link.active { background:rgba(58, 138, 243, 0.18); color:#000; border-left:4px solid var(--primary); }
+    .user-sidebar .profile { background:linear-gradient(90deg, rgba(22, 137, 252, 0.08), rgba(154,41,106,.08)); border-radius:.5rem; }
+  </style>
+  <div aria-labelledby="userSidebarLabel" class="offcanvas offcanvas-start offcanvas-lg user-sidebar" id="appSidebar" tabindex="-1">
+   <div class="offcanvas-header d-lg-none">
+    <h5 class="offcanvas-title" id="userSidebarLabel">
+     Menu
+    </h5>
+    <button aria-label="Close" class="btn-close text-reset" data-bs-dismiss="offcanvas" type="button">
+    </button>
+   </div>
+   <div class="offcanvas-body p-0 d-flex flex-column">
+    <div class="p-3 border-bottom">
+     <a class="d-flex align-items-center text-decoration-none" href="./forecast_dashboard.html">
+      <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/logo/32/32'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:32px;width:32px;object-fit:cover;border-radius:.25rem;"/>
+      <span class="fw-semibold" style="color:var(--secondary)">
+       Sales Forecasting
+      </span>
+     </a>
+    </div>
+    <div class="p-3 profile d-flex align-items-center gap-2">
+     <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;background-color: var(--secondary) !important; color:#fff;">
+      <i class="fa-solid fa-user">
+      </i>
+     </div>
+     <div>
+      <div class="fw-semibold" id="sidebarUserName">
+       Shashwat Srivastava
+      </div>
+      <div class="text-muted small">
+       User
+      </div>
+     </div>
+    </div>
+    <nav class="px-2 py-2">
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center active" href="./forecast_dashboard.html">
+        <i class="fa-solid fa-chart-line me-2">
+        </i>
+        Forecasts
+       </a>
+      </li>
+     </ul>
+     <div class="accordion accordion-flush" id="toolsAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingTools">
+        <button aria-controls="collapseTools" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseTools" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-list-check me-2">
+         </i>
+         Tools
+        </button>
+       </h2>
+       <div aria-labelledby="headingTools" class="accordion-collapse collapse" data-bs-parent="#toolsAccordion" id="collapseTools">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4" href="./forecast_dashboard.html#product">
+            <i class="fa-solid fa-list-check me-2">
+            </i>
+            Select Product
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="./forecast_dashboard.html#download">
+            <i class="fa-solid fa-download me-2">
+            </i>
+            Download Data
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+    </nav>
+    <div class="mt-auto p-3 border-top small text-muted">
+     <div>
+      ©
+      <span id="year-user">
+       2025
+      </span>
+      ACME Foods
+     </div>
+    </div>
+   </div>
+  </div>
+  <!-- Main Content Wrapper -->
+  <main class="with-sidebar flex-grow-1">
+   <div class="container-fluid py-3">
+    <!-- Page header -->
+    <div class="page-header">
+     <div class="d-flex align-items-center gap-3">
+      <h1 class="page-title mb-0">
+       Sales Forecasts Dashboard
+      </h1>
+     </div>
+     <div aria-label="Help" class="view-switcher" role="group">
+      <a class="option active" href="#download">
+       <i class="fa-solid fa-download me-1">
+       </i>
+       Download
+      </a>
+      <a class="option" href="#product">
+       <i class="fa-solid fa-filter me-1">
+       </i>
+       Filter
+      </a>
+     </div>
+    </div>
+    <nav aria-label="breadcrumb" class="breadcrumb mb-3">
+     <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item">
+       <a href="./forecast_dashboard.html">
+        Forecasts
+       </a>
+      </li>
+      <li class="breadcrumb-item">
+       <a href="#product">
+        Tools
+       </a>
+      </li>
+      <li aria-current="page" class="breadcrumb-item active">
+       Dashboard
+      </li>
+     </ol>
+    </nav>
+    <!-- System feedback area -->
+    <div class="alert alert-info d-none" id="systemAlert" role="alert">
+     Tip: Select a product to load historical and forecasted sales. You can zoom/pan in the chart and export data.
+    </div>
+    <!-- Product Filter -->
+    <section class="mb-3" id="product">
+     <div class="card app-card">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-list-check text-primary">
+        </i>
+        <span class="widget-title">
+         Product Filter
+        </span>
+       </div>
+       <div>
+        <button class="btn btn-light btn-sm" id="refreshBtn">
+         <i class="fa-solid fa-rotate">
+         </i>
+         Refresh
+        </button>
+       </div>
+      </div>
+      <div class="card-body">
+       <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-6 col-lg-4">
+         <label class="form-label" for="productSelector">
+          Select a Product
+         </label>
+         <select aria-label="Product selector" class="form-select" disabled="" id="productSelector">
+          <option selected="" value="">
+           Loading product list…
+          </option>
+         </select>
+         <div class="form-text">
+          Only products with sufficient historical data are listed.
+         </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+         <label class="form-label" for="categorySelector">
+          Category (optional)
+         </label>
+         <select aria-label="Category selector" class="form-select" id="categorySelector">
+          <option value="">
+           All
+          </option>
+         </select>
+        </div>
+        <div class="col-12 col-lg-4">
+         <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-primary" disabled="" id="applyFilter">
+           <i class="fa-solid fa-filter me-1">
+           </i>
+           Apply
+          </button>
+          <button class="btn btn-light" id="clearFilter">
+           <i class="fa-solid fa-eraser me-1">
+           </i>
+           Clear
+          </button>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+    <!-- Chart Section -->
+    <section class="mb-3">
+     <div class="card app-card position-relative" id="chartCard">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-chart-line text-secondary">
+        </i>
+        <span class="widget-title" id="chartTitle">
+         Forecast vs Historical —
+         <span class="text-muted">
+          Select a Product
+         </span>
+        </span>
+       </div>
+       <div class="d-flex align-items-center gap-2">
+        <span class="badge-soft info" id="zoomHint">
+         <i class="fa-solid fa-magnifying-glass-plus me-1">
+         </i>
+         Zoom &amp; pan enabled
+        </span>
+       </div>
+      </div>
+      <div class="card-body">
+       <div class="rounded bg-surface position-relative" id="chartContainer">
+        <div class="w-100 h-100" id="forecastChart">
+        </div>
+        <div class="loading-overlay d-none" id="chartLoading">
+         <div class="text-center">
+          <div aria-hidden="true" class="spinner-border text-primary" role="status">
+          </div>
+          <div class="mt-2 text-muted">
+           Loading chart…
+          </div>
+         </div>
+        </div>
+        <div class="empty-state py-5" id="chartEmptyState">
+         <div class="text-center">
+          <i class="fa-regular fa-chart-bar fa-2xl text-muted mb-2">
+          </i>
+          <div class="text-muted">
+           No data to display. Please choose a product.
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="small text-muted mt-2">
+        Axes: Month (X) • Sales Quantity (Y). Historical: Info blue • Forecast: Primary orange (dashed).
+       </div>
+      </div>
+     </div>
+    </section>
+    <!-- Download Section -->
+    <a name="download"></a>
+    <section class="mb-3" id="download">
+     <div class="card app-card">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-download text-primary">
+        </i>
+        <span class="widget-title">
+         Download Forecast
+        </span>
+       </div>
+      </div>
+      <div class="card-body">
+       <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-6">
+         <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="form-check">
+           <input checked="" class="form-check-input" id="fmtCsv" name="exportFormat" type="radio" value="csv"/>
+           <label class="form-check-label" for="fmtCsv">
+            CSV
+           </label>
+          </div>
+          <div class="form-check">
+           <input class="form-check-input" disabled="" id="fmtXlsx" name="exportFormat" type="radio" value="xlsx"/>
+           <label class="form-check-label" for="fmtXlsx">
+            Excel (.xlsx)
+           </label>
+          </div>
+         </div>
+        </div>
+        <div class="col-12 col-md-6 text-md-end">
+         <button class="btn btn-success" disabled="" id="downloadBtn">
+          <i class="fa-solid fa-file-arrow-down me-1">
+          </i>
+          Download Forecast (.csv)
+         </button>
+        </div>
+       </div>
+       <div class="small text-muted mt-2">
+        Includes: Product Name, Forecast Month, Forecasted Quantity.
+       </div>
+      </div>
+     </div>
+    </section>
+    <!-- Data Preview Table -->
+    <section>
+     <div class="card app-card">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-table text-secondary">
+        </i>
+        <span class="widget-title">
+         Data Preview
+        </span>
+       </div>
+       <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm" style="width: 260px;">
+         <span class="input-group-text">
+          <i class="fa-solid fa-magnifying-glass">
+          </i>
+         </span>
+         <input class="form-control" id="tableSearch" placeholder="Filter by month…" type="search"/>
+        </div>
+       </div>
+      </div>
+      <div class="card-body">
+       <div class="table-responsive">
+        <table class="table table-theme table-hover" id="previewTable">
+         <thead>
+          <tr>
+           <th data-sort="month" role="button">
+            Month
+            <i class="fa-solid fa-sort ms-1">
+            </i>
+           </th>
+           <th class="text-end" data-sort="historical" role="button">
+            Historical Sales
+            <i class="fa-solid fa-sort ms-1">
+            </i>
+           </th>
+           <th class="text-end" data-sort="forecast" role="button">
+            Forecasted Sales
+            <i class="fa-solid fa-sort ms-1">
+            </i>
+           </th>
+          </tr>
+         </thead>
+         <tbody id="tableBody">
+          <!-- rows injected dynamically -->
+         </tbody>
+        </table>
+       </div>
+       <div class="d-flex align-items-center justify-content-between mt-2">
+        <div class="small text-muted" id="paginationInfo">
+         Showing 0–0 of 0
+        </div>
+        <div aria-label="Pagination controls" class="btn-group" role="group">
+         <button class="btn btn-light btn-sm" disabled="" id="prevPage">
+          <i class="fa-solid fa-chevron-left">
+          </i>
+         </button>
+         <button class="btn btn-light btn-sm" disabled="" id="nextPage">
+          <i class="fa-solid fa-chevron-right">
+          </i>
+         </button>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+   </div>
+  </main>
+  <!-- Footer (User) -->
+  <!-- USER COMPONENT: Footer (Role: User) -->
+  <style>
+   .user-footer { background:#ffffff; border-top:1px solid #e9ecef; }
+    .user-footer a { color: var(--secondary); }
+    .user-footer a:hover { color: #6f1e49; text-decoration: underline; }
+  </style>
+  <footer class="user-footer py-3 mt-auto">
+   <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+     <img alt="Logo" onerror="this.onerror=null;this.src='https://picsum.photos/seed/foot/20/20'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:20px;width:20px;border-radius:.25rem;"/>
+     <span class="text-muted small">
+      ©
+      <span id="footerYear">
+       2025
+      </span>
+      ACME Foods
+     </span>
+    </div>
+    <div class="d-flex align-items-center gap-3 small">
+     </span>
+     <a class="text-decoration-none" href="#download">
+      <i class="fa-solid fa-download me-1">
+      </i>
+      Download
+     </a>
+    </div>
+   </div>
+  </footer>
+  <!-- Toast Container -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: var(--z-toast);">
+   <div aria-atomic="true" aria-live="assertive" class="toast align-items-center text-bg-primary border-0" id="appToast" role="alert">
+    <div class="d-flex">
+     <div class="toast-body" id="toastBody">
+      Action completed.
+     </div>
+     <button aria-label="Close" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" type="button">
+     </button>
+    </div>
+   </div>
+  </div>
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js">
+  </script>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js">
+  </script>
+  <!-- Page Script -->
+  <script>
+   // State
+const state = {
+    products: [],
+    categories: [],
+    selectedProduct: null,
+    selectedCategory: '',
+    historicalData: [],
+    forecastData: [],
+    isLoading: false,
+    table: {
+        rows: [],
+        filtered: [],
+        page: 1,
+        pageSize: 6,
+        sortKey: 'month',
+        sortDir: 'asc'
+    }
+};
+
+// Elements
+const els = {
+    productSelector: document.getElementById('productSelector'),
+    categorySelector: document.getElementById('categorySelector'),
+    applyFilter: document.getElementById('applyFilter'),
+    clearFilter: document.getElementById('clearFilter'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    chartLoading: document.getElementById('chartLoading'),
+    chartEmptyState: document.getElementById('chartEmptyState'),
+    chartTitle: document.getElementById('chartTitle'),
+    forecastChart: document.getElementById('forecastChart'),
+    downloadBtn: document.getElementById('downloadBtn'),
+    tableBody: document.getElementById('tableBody'),
+    tableSearch: document.getElementById('tableSearch'),
+    paginationInfo: document.getElementById('paginationInfo'),
+    prevPage: document.getElementById('prevPage'),
+    nextPage: document.getElementById('nextPage'),
+    systemAlert: document.getElementById('systemAlert'),
+    toastBody: document.getElementById('toastBody'),
+};
+
+// Utilities
+const fmtNum = (n) => n.toLocaleString(undefined, {
+    maximumFractionDigits: 0
+});
+const monthLabel = (dateStr) => dayjs(dateStr).format('MMM YYYY');
+
+function showToast(msg, type = 'primary') {
+    const toastEl = document.getElementById('appToast');
+    toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+    els.toastBody.textContent = msg;
+    const toast = new bootstrap.Toast(toastEl, {
+        delay: 2500
+    });
+    toast.show();
+}
+
+function setLoading(isLoading) {
+    state.isLoading = isLoading;
+    els.chartLoading.classList.toggle('d-none', !isLoading);
+    els.applyFilter.disabled = isLoading || !state.selectedProduct;
+    els.productSelector.disabled = isLoading || state.products.length === 0;
+    els.downloadBtn.disabled = isLoading || !state.selectedProduct;
+}
+
+// Mock API
+function fetchProducts() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            // sample products & categories
+            const categories = ['Beverages', 'Snacks', 'Dairy'];
+            const prods = [{
+                id: 1,
+                name: 'Orange Soda 330ml',
+                category: 'Beverages'
+            }, {
+                id: 2,
+                name: 'Grape Soda 330ml',
+                category: 'Beverages'
+            }, {
+                id: 3,
+                name: 'Potato Chips - Sea Salt 150g',
+                category: 'Snacks'
+            }, {
+                id: 4,
+                name: 'Potato Chips - BBQ 150g',
+                category: 'Snacks'
+            }, {
+                id: 5,
+                name: 'Greek Yogurt 500g',
+                category: 'Dairy'
+            }, {
+                id: 6,
+                name: 'Cheddar Cheese 250g',
+                category: 'Dairy'
+            }, ];
+            resolve({
+                products: prods,
+                categories
+            });
+        }, 600);
+    });
+}
+
+function fetchDataForProduct(productId) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            // generate 12 months historical + 6 months forecast
+            const endHist = dayjs().startOf('month').subtract(1, 'month');
+            const hist = [];
+            for (let i = 17; i >= 6; i--) { // 12 months ending last month (rolling window)
+                const d = endHist.subtract(i - 6, 'month');
+                const base = 400 + (productId * 35) + ((d.month() + 1) * 8);
+                const noise = Math.round((Math.sin(d.month()) + 1) * 20);
+                hist.push({
+                    date: d.format('YYYY-MM-01'),
+                    value: base + noise
+                });
+            }
+            const forecast = [];
+            const startFc = endHist.add(1, 'month');
+            for (let i = 0; i < 6; i++) {
+                const d = startFc.add(i, 'month');
+                const base = 420 + (productId * 35) + ((d.month() + 1) * 9);
+                const uplift = 30 + Math.round(Math.cos(i) * 10);
+                forecast.push({
+                    date: d.format('YYYY-MM-01'),
+                    value: base + uplift
+                });
+            }
+            resolve({
+                historical: hist,
+                forecast
+            });
+        }, 700);
+    });
+}
+
+// Render product lists
+function populateSelectors() {
+    // products
+    els.productSelector.innerHTML = '<option value="">Select a Product…</option>' + state.products
+        .filter(p => !state.selectedCategory || p.category === state.selectedCategory)
+        .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    els.productSelector.disabled = state.products.length === 0;
+    // categories
+    const cats = [''].concat(state.categories);
+    els.categorySelector.innerHTML = cats.map(c => `<option value="${c}">${c || 'All'}</option>`).join('');
+}
+
+// Chart
+function renderChart() {
+    const hasData = state.historicalData.length || state.forecastData.length;
+    els.chartEmptyState.classList.toggle('d-none', !!hasData);
+    if (!hasData) {
+        Plotly.purge(els.forecastChart);
+        return;
+    }
+    const histTrace = {
+        x: state.historicalData.map(d => d.date),
+        y: state.historicalData.map(d => d.value),
+        mode: 'lines+markers',
+        name: 'Historical',
+        line: {
+            color: '#0099D2',
+            width: 3
+        },
+        marker: {
+            color: '#0099D2'
+        },
+        hovertemplate: 'Month: %{x|%b %Y}<br>Sales: %{y:,} units<extra></extra>'
+    };
+    const fcTrace = {
+        x: state.forecastData.map(d => d.date),
+        y: state.forecastData.map(d => d.value),
+        mode: 'lines+markers',
+        name: 'Forecast',
+        line: {
+            color: '#f08e1b',
+            width: 3,
+            dash: 'dash'
+        },
+        marker: {
+            color: '#f08e1b'
+        },
+        hovertemplate: 'Month: %{x|%b %Y}<br>Forecast: %{y:,} units<extra></extra>'
+    };
+    const layout = {
+        margin: {
+            l: 48,
+            r: 24,
+            t: 16,
+            b: 48
+        },
+        xaxis: {
+            title: 'Month',
+            type: 'date'
+        },
+        yaxis: {
+            title: 'Sales Quantity',
+            rangemode: 'tozero'
+        },
+        legend: {
+            orientation: 'h',
+            x: 0,
+            y: 1.15
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+    };
+    const config = {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['select2d', 'lasso2d']
+    };
+    Plotly.newPlot(els.forecastChart, [histTrace, fcTrace], layout, config);
+    window.dispatchEvent(new Event('resize'));
+}
+
+// Table rendering
+function rebuildTableRows() {
+    // Compose rows from both datasets; align by date
+    const mapHist = new Map(state.historicalData.map(d => [d.date, d.value]));
+    const mapFc = new Map(state.forecastData.map(d => [d.date, d.value]));
+    const allDates = Array.from(new Set([...mapHist.keys(), ...mapFc.keys()])).sort();
+    state.table.rows = allDates.map(dt => ({
+        month: dt,
+        historical: mapHist.get(dt) || null,
+        forecast: mapFc.get(dt) || null
+    }));
+    applyTableFilterSortPaginate();
+}
+
+function applyTableFilterSortPaginate() {
+    // Filter
+    const q = els.tableSearch.value.trim().toLowerCase();
+    state.table.filtered = state.table.rows.filter(r => monthLabel(r.month).toLowerCase().includes(q));
+    // Sort
+    const {
+        sortKey,
+        sortDir
+    } = state.table;
+    state.table.filtered.sort((a, b) => {
+        let va = a[sortKey],
+            vb = b[sortKey];
+        if (sortKey === 'month') {
+            va = a.month;
+            vb = b.month;
+        }
+        if (va === null) return 1;
+        if (vb === null) return -1;
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+    // Pagination
+    const total = state.table.filtered.length;
+    const pages = Math.max(1, Math.ceil(total / state.table.pageSize));
+    state.table.page = Math.min(state.table.page, pages);
+    const startIdx = (state.table.page - 1) * state.table.pageSize;
+    const pageSlice = state.table.filtered.slice(startIdx, startIdx + state.table.pageSize);
+    renderTable(pageSlice, total, startIdx);
+}
+
+function renderTable(rows, total, startIdx) {
+    els.tableBody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${monthLabel(r.month)}</td>
+          <td class="text-end">${r.historical !== null ? fmtNum(r.historical) : '<span class="text-muted">—</span>'}</td>
+          <td class="text-end ${r.forecast !== null ? '' : 'text-muted'}">${r.forecast !== null ? fmtNum(r.forecast) : '—'}</td>
+        </tr>
+      `).join('');
+    const shown = rows.length ? `${startIdx + 1}–${startIdx + rows.length}` : '0–0';
+    els.paginationInfo.textContent = `Showing ${shown} of ${total}`;
+    // Buttons
+    const pages = Math.max(1, Math.ceil(total / state.table.pageSize));
+    els.prevPage.disabled = state.table.page <= 1;
+    els.nextPage.disabled = state.table.page >= pages;
+}
+
+// Selection & events
+function onProductChange() {
+    const val = els.productSelector.value;
+    state.selectedProduct = val ? state.products.find(p => String(p.id) === String(val)) : null;
+    els.applyFilter.disabled = !state.selectedProduct || state.isLoading;
+    els.downloadBtn.disabled = !state.selectedProduct || state.isLoading;
+}
+
+async function loadDataForSelected() {
+    if (!state.selectedProduct) return;
+    setLoading(true);
+    els.chartTitle.innerHTML = `Forecast vs Historical — <strong>${state.selectedProduct.name}</strong>`;
+    try {
+        const data = await fetchDataForProduct(state.selectedProduct.id);
+        state.historicalData = data.historical;
+        state.forecastData = data.forecast;
+        renderChart();
+        rebuildTableRows();
+        showToast('Forecast loaded successfully', 'success');
+    } catch (e) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load forecast data. Please try again.'
+        });
+    } finally {
+        setLoading(false);
+    }
+}
+
+function clearFilters() {
+    els.categorySelector.value = '';
+    state.selectedCategory = '';
+    els.tableSearch.value = '';
+    populateSelectors();
+    els.productSelector.value = '';
+    onProductChange();
+    // Clear chart and table
+    state.historicalData = [];
+    state.forecastData = [];
+    renderChart();
+    rebuildTableRows();
+    els.chartTitle.innerHTML = 'Forecast vs Historical — <span class="text-muted">Select a Product</span>';
+    els.chartEmptyState.classList.remove('d-none');
+    showToast('Cleared filters', 'primary');
+}
+
+function exportCSV() {
+    if (!state.selectedProduct) return;
+    const rows = state.forecastData.map(r => ({
+        product: state.selectedProduct.name,
+        month: monthLabel(r.date),
+        quantity: r.value
+    }));
+    const header = ['Product Name', 'Forecast Month', 'Forecasted Quantity'];
+    const csv = [header.join(','), ...rows.map(r => [
+        '"' + r.product.replace(/"/g, '""') + '"',
+        r.month,
+        r.quantity
+    ].join(','))].join('\n');
+    const blob = new Blob([csv], {
+        type: 'text/csv;charset=utf-8;'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${state.selectedProduct.name.replace(/\s+/g, '_')}_forecast.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Your CSV file is downloading…', 'success');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', async () => {
+    // Year labels
+    const y = new Date().getFullYear();
+    document.getElementById('year-user').textContent = y;
+    document.getElementById('footerYear').textContent = y;
+
+    // System hint
+    els.systemAlert.classList.remove('d-none');
+
+    // Load products and categories
+    const {
+        products,
+        categories
+    } = await fetchProducts();
+    state.products = products;
+    state.categories = categories;
+    populateSelectors();
+    els.productSelector.disabled = false;
+
+    // Preselect from query param if present
+    const params = new URLSearchParams(window.location.search);
+    const qProduct = params.get('product');
+    if (qProduct) {
+        const opt = Array.from(els.productSelector.options).find(o => o.text.toLowerCase().includes(qProduct.toLowerCase()));
+        if (opt) {
+            els.productSelector.value = opt.value;
+            onProductChange();
+            loadDataForSelected();
+        }
+    }
+
+    // Event wiring
+    els.productSelector.addEventListener('change', onProductChange);
+    els.categorySelector.addEventListener('change', (e) => {
+        state.selectedCategory = e.target.value;
+        populateSelectors();
+        els.productSelector.value = '';
+        onProductChange();
+    });
+    els.applyFilter.addEventListener('click', loadDataForSelected);
+    els.clearFilter.addEventListener('click', clearFilters);
+    els.refreshBtn.addEventListener('click', async () => {
+        setLoading(true);
+        try {
+            const data = await fetchProducts();
+            state.products = data.products;
+            state.categories = data.categories;
+            populateSelectors();
+            showToast('Refreshed product list', 'info');
+        } finally {
+            setLoading(false);
+        }
+    });
+    els.downloadBtn.addEventListener('click', () => {
+        const fmt = document.querySelector('input[name="exportFormat"]:checked').value;
+        if (fmt === 'xlsx') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Coming soon',
+                text: 'Excel downloads will be available shortly. Please use CSV for now.'
+            });
+            return;
+        }
+        exportCSV();
+    });
+
+    // Table events
+    els.tableSearch.addEventListener('input', () => {
+        state.table.page = 1;
+        applyTableFilterSortPaginate();
+    });
+    els.prevPage.addEventListener('click', () => {
+        if (state.table.page > 1) {
+            state.table.page--;
+            applyTableFilterSortPaginate();
+        }
+    });
+    els.nextPage.addEventListener('click', () => {
+        state.table.page++;
+        applyTableFilterSortPaginate();
+    });
+    document.querySelectorAll('#previewTable thead th[role="button"]').forEach(th => {
+        th.addEventListener('click', () => {
+            const key = th.getAttribute('data-sort');
+            if (state.table.sortKey === key) {
+                state.table.sortDir = state.table.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.table.sortKey = key;
+                state.table.sortDir = 'asc';
+            }
+            state.table.page = 1;
+            applyTableFilterSortPaginate();
+        });
+    });
+
+    // Notifications demo
+    document.getElementById('notifyBell').addEventListener('click', (e) => {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Notifications',
+            html: '<div class="text-start">No new notifications. You\'re all caught up!<br><small class="text-muted">System checks: OK</small></div>',
+            icon: 'info',
+            confirmButtonText: 'Close',
+            confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-info') || '#0099D2'
+        });
+    });
+
+    // Build initial empty table
+    rebuildTableRows();
+
+    // Keep Plotly responsive on sidebar open/close
+    const sidebarEl = document.getElementById('appSidebar');
+    sidebarEl.addEventListener('shown.bs.offcanvas', () => window.dispatchEvent(new Event('resize')));
+    sidebarEl.addEventListener('hidden.bs.offcanvas', () => window.dispatchEvent(new Event('resize')));
+    window.addEventListener('resize', () => Plotly.Plots.resize(els.forecastChart));
+});
+  </script>
+ </body>
+</html>

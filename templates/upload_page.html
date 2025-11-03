@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Data Upload • Admin
+  </title>
+  <!-- Brand font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <!-- Site theme -->
+  <link href="style.css" rel="stylesheet"/>
+  <!-- Page-specific CSS -->
+  <link href="upload_page.css" rel="stylesheet"/>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js">
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+  </script>
+ </head>
+ <body class="d-flex flex-column min-vh-100">
+  <!-- ADMIN COMPONENT: Header (Role: Admin) -->
+  <style>
+   .admin-navbar { background-color: var(--primary); }
+    .admin-navbar .nav-link, .admin-navbar .navbar-brand, .admin-navbar .navbar-text { color:#fff; }
+    .admin-navbar .nav-link:hover { color:#212529; background: rgba(255,255,255,.2); border-radius:.375rem; }
+    .badge-dot { width:8px; height:8px; background:#dc3545; border-radius:50%; display:inline-block; margin-left:-6px; margin-top:-6px; position:absolute; }
+  </style>
+  <nav class="navbar navbar-expand-lg admin-navbar py-2">
+   <div class="container-fluid">
+    <button aria-controls="appSidebar" aria-label="Toggle sidebar" class="btn btn-light d-lg-none me-2" data-bs-target="#appSidebar" data-bs-toggle="offcanvas" type="button">
+     <i class="fa-solid fa-bars">
+     </i>
+    </button>
+    <a class="navbar-brand d-flex align-items-center" href="./admin_dashboard.html">
+     <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/adminlogo/28/28'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:28px;width:28px;border-radius:.25rem;"/>
+     Admin
+    </a>
+    <div class="d-none d-lg-flex flex-grow-1 mx-3">
+     <form action="{{ url_for('admin_dashboard') }}" class="w-50" method="GET" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" name="q" placeholder="Search products, users, models…" type="search"/>
+      </div>
+     </form>
+    </div>
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-light btn-sm" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-1">
+       </i>
+       Upload Data
+      </a>
+     </li>
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-dark btn-sm" href="{{ url_for('model_management') }}" style="background-color: var(--secondary); border-color: var(--secondary);">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train Model
+      </a>
+     </li>
+     <li class="nav-item dropdown">
+      <a aria-expanded="false" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#" role="button">
+       <span class="avatar rounded-circle bg-dark d-inline-flex justify-content-center align-items-center me-2" style="width:28px;height:28px;">
+        <i class="fa-solid fa-user-gear text-white small">
+        </i>
+       </span>
+       <span class="d-none d-sm-inline">
+        {{currentUserName}}
+       </span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+       <li>
+        <h6 class="dropdown-header">
+         Admin
+        </h6>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+         <i class="fa-solid fa-gear me-2">
+         </i>
+         Settings
+        </a>
+       </li>
+       <li>
+        <hr class="dropdown-divider"/>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('login') }}">
+         <i class="fa-solid fa-right-from-bracket me-2">
+         </i>
+         Logout
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+  </nav>
+  <!-- ADMIN COMPONENT: Sidebar (Role: Admin) -->
+  <style>
+   :root { --primary:#6d83e1; --secondary:#9a296a; }
+    .admin-sidebar .nav-link { color:#333; border-radius:.375rem; }
+    .admin-sidebar .nav-link:hover { background:rgba(240,142,27,.12); color:var(--secondary); }
+    .admin-sidebar .nav-link.active { background:rgba(240,142,27,.18); color:#000; border-left:4px solid var(--primary); }
+    .admin-sidebar .section-title { font-size:.75rem; color:#6c757d; text-transform:uppercase; letter-spacing:.08em; margin:1rem 0 .25rem; }
+    .admin-sidebar .profile { background:linear-gradient(90deg, rgba(240,142,27,.08), rgba(154,41,106,.08)); border-radius:.5rem; }
+  </style>
+
+  <div aria-labelledby="appSidebarLabel" class="offcanvas offcanvas-start offcanvas-lg admin-sidebar" id="appSidebar" tabindex="-1">
+   <div class="offcanvas-header d-lg-none">
+    <h5 class="offcanvas-title" id="appSidebarLabel">
+     Admin Navigation
+    </h5>
+    <button aria-label="Close" class="btn-close text-reset" data-bs-dismiss="offcanvas" type="button">
+    </button>
+   </div>
+   <div class="offcanvas-body p-0 d-flex flex-column">
+    <div class="p-3 border-bottom">
+     <a class="d-flex align-items-center text-decoration-none" href="{{ url_for('admin_dashboard') }}">
+      <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/sidebarlogo/32/32'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:32px;width:32px;object-fit:cover;border-radius:.25rem;"/>
+      <span class="fw-semibold" style="color:var(--secondary)">
+       Sales Forecasting Admin
+      </span>
+     </a>
+    </div>
+    <div class="p-3 profile d-flex align-items-center gap-2">
+     <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width:40px;height:40px;background-color: var(--secondary) !important; color:#fff;">
+      <i class="fa-solid fa-user">
+      </i>
+     </div>
+     <div>
+      <div class="fw-semibold">
+       {{currentUserName}}
+      </div>
+      <div class="text-muted small">
+       Admin
+      </div>
+     </div>
+    </div>
+    <nav class="px-2 py-2 sidebar-nav">
+     <div class="section-title px-2">
+      Overview
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+        <i class="fa-solid fa-gauge me-2">
+        </i>
+        Dashboard
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Data
+     </div>
+     <div class="accordion accordion-flush" id="dataAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingData">
+        <button aria-controls="collapseData" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseData" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-database me-2">
+         </i>
+         Data Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingData" class="accordion-collapse collapse show" data-bs-parent="#dataAccordion" id="collapseData">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4 active" href="{{ url_for('upload_page') }}">
+            <i class="fa-solid fa-file-arrow-up me-2">
+            </i>
+            Upload Data
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('product_management') }}">
+            <i class="fa-solid fa-boxes-stacked me-2">
+            </i>
+            Product Management
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Users
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('user_management') }}">
+        <i class="fa-solid fa-users-gear me-2">
+        </i>
+        User Management
+       </a>
+      </li>
+     </ul>
+     <div class="section-title px-2">
+      Models
+     </div>
+     <div class="accordion accordion-flush" id="modelAccordion">
+      <div class="accordion-item border-0">
+       <h2 class="accordion-header" id="headingModel">
+        <button aria-controls="collapseModel" aria-expanded="false" class="accordion-button collapsed py-2" data-bs-target="#collapseModel" data-bs-toggle="collapse" type="button">
+         <i class="fa-solid fa-brain me-2">
+         </i>
+         Model Management
+        </button>
+       </h2>
+       <div aria-labelledby="headingModel" class="accordion-collapse collapse" data-bs-parent="#modelAccordion" id="collapseModel">
+        <div class="accordion-body py-2">
+         <ul class="nav nav-pills flex-column gap-1">
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('model_management') }}">
+            <i class="fa-solid fa-brain me-2">
+            </i>
+            Models Overview
+           </a>
+          </li>
+          <li>
+           <a class="nav-link ps-4" href="{{ url_for('model_management') }}#train">
+            <i class="fa-solid fa-rocket me-2">
+            </i>
+            Train New Model
+           </a>
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="section-title px-2">
+      Insights
+     </div>
+     <ul class="nav nav-pills flex-column mb-2">
+      <li class="nav-item">
+       <a class="nav-link d-flex align-items-center" href="{{ url_for('forecast_dashboard') }}">
+        <i class="fa-solid fa-chart-line me-2">
+        </i>
+        Forecasts
+       </a>
+      </li>
+     </ul>
+    </nav>
+    <div class="mt-auto p-3 border-top small text-muted">
+     <div>
+      ©
+      <span id="year-admin">
+       2025
+      </span>
+      ACME Foods
+     </div>
+    </div>
+   </div>
+  </div>
+  <!-- Main content wrapper (shifted when sidebar shown on lg+) -->
+  <div class="main-wrap flex-grow-1">
+   <main class="main-panel container-fluid">
+    <div class="container-max">
+     <!-- Page Header -->
+     <div class="page-header">
+      <div class="d-flex align-items-center gap-2">
+       <h1 class="page-title mb-0">
+        Data Upload
+       </h1>
+       <span class="badge-soft info">
+        <i class="fa-solid fa-database me-1">
+        </i>
+        Data Management
+       </span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+       <a class="btn btn-light btn-sm" href="#" id="downloadTemplateBtn">
+        <i class="fa-solid fa-file-csv me-1">
+        </i>
+        Download Template
+       </a>
+       <a class="btn btn-info btn-sm" href="{{ url_for('forecast_dashboard') }}">
+        <i class="fa-solid fa-chart-line me-1">
+        </i>
+        View Forecasts
+       </a>
+      </div>
+     </div>
+     <!-- Status Notification area -->
+     <div class="alert d-none" id="uploadAlert" role="alert">
+     </div>
+     <!-- Upload Form Card -->
+     <div class="card app-card upload-card mb-4">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-file-arrow-up">
+        </i>
+        <span class="widget-title">
+         Upload a CSV File
+        </span>
+       </div>
+       <div class="text-muted small">
+        Accepted format: .csv only
+       </div>
+      </div>
+      <div class="card-body">
+       <form class="row g-3" id="uploadForm" novalidate="">
+        <div class="col-md-4">
+         <label class="form-label" for="dataType">
+          Data Type
+          <span class="text-danger">
+           *
+          </span>
+         </label>
+         <select class="form-select" id="dataType" required="">
+          <option disabled="" selected="" value="">
+           Select data type…
+          </option>
+          <option value="Historical Sales">
+           Historical Sales
+          </option>
+          <option value="Products">
+           Products
+          </option>
+          <option value="Promotions">
+           Promotions
+          </option>
+          <option value="Holidays">
+           Holidays
+          </option>
+         </select>
+         <div class="form-text">
+          Routes your CSV to the correct validation and ingestion pipeline.
+         </div>
+        </div>
+        <div class="col-md-8">
+         <label class="form-label">
+          CSV File
+          <span class="text-danger">
+           *
+          </span>
+         </label>
+         <div class="dropzone rounded p-3" id="dropZone">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+           <div class="d-flex align-items-center gap-2">
+            <span class="text-warning">
+             <i class="fa-solid fa-cloud-arrow-up fa-lg">
+             </i>
+            </span>
+            <div>
+             <div class="fw-semibold">
+              Drag &amp; drop your file here
+             </div>
+             <div class="text-muted small">
+              or click to browse
+             </div>
+            </div>
+           </div>
+           <label class="btn btn-light mb-0">
+            <i class="fa-solid fa-folder-open me-1">
+            </i>
+            Browse
+            <input accept=".csv" class="d-none" id="fileInput" required="" type="file"/>
+           </label>
+          </div>
+         </div>
+         <div class="small text-muted mt-1" id="selectedFileName">
+          No file selected
+         </div>
+        </div>
+        <div class="col-12 d-flex align-items-center justify-content-between">
+         <div class="d-flex align-items-center gap-3">
+          <div class="form-check">
+           <input checked="" class="form-check-input" id="hasHeaders" type="checkbox" value="1"/>
+           <label class="form-check-label" for="hasHeaders">
+            First row contains column headers
+           </label>
+          </div>
+          <div class="form-check">
+           <input class="form-check-input" id="dryRun" type="checkbox" value="1"/>
+           <label class="form-check-label" for="dryRun">
+            Validate only (no ingestion)
+           </label>
+          </div>
+         </div>
+         <div>
+          <button class="btn btn-primary" disabled="" id="uploadBtn" type="submit">
+           <span class="btn-label">
+            <i class="fa-solid fa-upload me-1">
+            </i>
+            Upload File
+           </span>
+           <span class="btn-working d-none">
+            <span aria-hidden="true" class="spinner-border spinner-border-sm me-2" role="status">
+            </span>
+            Uploading…
+           </span>
+          </button>
+         </div>
+        </div>
+        <div class="col-12 d-none" id="progressWrap">
+         <div aria-label="Upload progress" aria-valuemax="100" aria-valuemin="0" class="progress" role="progressbar">
+          <div class="progress-bar" id="uploadProgress" style="width: 0%">
+           0%
+          </div>
+         </div>
+         <div class="small text-muted mt-1">
+          Do not close this page while upload is in progress.
+         </div>
+        </div>
+       </form>
+      </div>
+      <div class="card-footer d-flex align-items-center justify-content-between">
+       <div class="text-muted small">
+        Need sample files? Use the Template button above to download a CSV tailored to the selected data type.
+       </div>
+       <div class="text-muted small">
+        <i class="fa-solid fa-shield-halved me-1">
+        </i>
+        Max file size: 50 MB
+       </div>
+      </div>
+     </div>
+     <!-- Quick Data Quality Summary (Chart) -->
+     <div class="row g-4 mb-4">
+      <div class="col-12 col-lg-6">
+       <div class="card">
+        <div class="card-header">
+         <div class="title d-flex align-items-center gap-2">
+          <i class="fa-solid fa-chart-column">
+          </i>
+          <span class="widget-title">
+           Rows Ingested (Last 7 Uploads)
+          </span>
+         </div>
+        </div>
+        <div class="card-body">
+         <canvas aria-label="Rows ingested chart" height="160" id="ingestChart">
+         </canvas>
+        </div>
+       </div>
+      </div>
+      <div class="col-12 col-lg-6">
+       <div class="card">
+        <div class="card-header">
+         <div class="title d-flex align-items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles">
+          </i>
+          <span class="widget-title">
+           Data Quality Checks
+          </span>
+         </div>
+        </div>
+        <div class="card-body">
+         <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-center gap-2 mb-2">
+           <span class="status-dot success">
+           </span>
+           Schema validation passed for 5 of last 6 uploads
+          </li>
+          <li class="d-flex align-items-center gap-2 mb-2">
+           <span class="status-dot warning">
+           </span>
+           2 uploads had minor warnings (trimmed whitespace, normalized dates)
+          </li>
+          <li class="d-flex align-items-center gap-2">
+           <span class="status-dot error">
+           </span>
+           1 upload contained invalid IDs (auto-rejected, see errors CSV)
+          </li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Recent Uploads Table -->
+     <div class="card">
+      <div class="card-header">
+       <div class="title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-list-check">
+        </i>
+        <span class="widget-title">
+         Recent Uploads
+        </span>
+       </div>
+       <div class="d-flex align-items-center gap-2">
+        <input class="form-control form-control-sm" id="filterText" placeholder="Filter by file or type" type="text"/>
+        <select class="form-select form-select-sm" id="filterStatus" style="max-width:180px;">
+         <option value="">
+          All statuses
+         </option>
+         <option value="Success">
+          Success
+         </option>
+         <option value="Warning">
+          Warning
+         </option>
+         <option value="Error">
+          Error
+         </option>
+        </select>
+       </div>
+      </div>
+      <div class="card-body p-0">
+       <div class="table-responsive">
+        <table class="table-theme mb-0" id="uploadsTable">
+         <thead>
+          <tr>
+           <th class="sortable" data-sort="type">
+            Type
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th class="sortable" data-sort="file">
+            File
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th class="text-end sortable" data-sort="rows">
+            Rows
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th class="text-end sortable" data-sort="errors">
+            Errors
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th class="sortable" data-sort="status">
+            Status
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th class="sortable" data-sort="date">
+            Processed At
+            <i class="fa-solid fa-sort text-muted">
+            </i>
+           </th>
+           <th>
+            Actions
+           </th>
+          </tr>
+         </thead>
+         <tbody id="uploadsTbody">
+          <!-- Rows injected by JS -->
+         </tbody>
+        </table>
+       </div>
+      </div>
+      <div class="card-footer d-flex align-items-center justify-content-between">
+       <div class="small text-muted" id="paginationInfo">
+        Showing 1–6 of 18
+       </div>
+       <nav>
+        <ul class="pagination pagination-sm mb-0">
+         <li class="page-item disabled">
+          <a class="page-link" href="#">
+           Prev
+          </a>
+         </li>
+         <li class="page-item active">
+          <a class="page-link" href="#">
+           1
+          </a>
+         </li>
+         <li class="page-item">
+          <a class="page-link" href="#">
+           2
+          </a>
+         </li>
+         <li class="page-item">
+          <a class="page-link" href="#">
+           3
+          </a>
+         </li>
+         <li class="page-item">
+          <a class="page-link" href="#">
+           Next
+          </a>
+         </li>
+        </ul>
+       </nav>
+      </div>
+     </div>
+    </div>
+   </main>
+   <!-- ADMIN COMPONENT: Footer (Role: Admin) -->
+   <style>
+    .admin-footer { background:#fff; border-top:1px solid #e9ecef; }
+      .admin-footer a { color: var(--secondary); }
+      .admin-footer a:hover { color: #6f1e49; text-decoration: underline; }
+   </style>
+   <footer class="admin-footer py-3 mt-auto">
+    <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+     <div class="d-flex align-items-center gap-2">
+      <img alt="Logo" onerror="this.onerror=null;this.src='https://picsum.photos/seed/footerlogo/20/20'" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:20px;width:20px;border-radius:.25rem;"/>
+      <span class="text-muted small">
+       ©
+       <span id="year-footer">
+        2025
+       </span>
+       ACME Foods
+      </span>
+     </div>
+     <div class="d-flex align-items-center gap-3 small">
+      <a class="text-decoration-none" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-1">
+       </i>
+       Upload
+      </a>
+      <a class="text-decoration-none" href="{{ url_for('model_management') }}#train">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train
+      </a>
+     </div>
+    </div>
+   </footer>
+  </div>
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script>
+   // Page initialization
+document.addEventListener('DOMContentLoaded', () => {
+    // Year
+    const y = new Date().getFullYear();
+    const y1 = document.getElementById('year-admin');
+    const y2 = document.getElementById('year-footer');
+    if (y1) y1.textContent = y;
+    if (y2) y2.textContent = y;
+
+    // Form controls
+    const dataType = document.getElementById('dataType');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const btnLabel = uploadBtn.querySelector('.btn-label');
+    const btnWorking = uploadBtn.querySelector('.btn-working');
+    const dropZone = document.getElementById('dropZone');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar = document.getElementById('uploadProgress');
+    const uploadAlert = document.getElementById('uploadAlert');
+    const hasHeaders = document.getElementById('hasHeaders');
+    const dryRun = document.getElementById('dryRun');
+    const templateBtn = document.getElementById('downloadTemplateBtn');
+
+    let chosenFile = null;
+
+    function updateButtonState() {
+        uploadBtn.disabled = !(dataType.value && chosenFile);
+    }
+
+    dataType.addEventListener('change', updateButtonState);
+
+    fileInput.addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (!f) {
+            chosenFile = null;
+            selectedFileName.textContent = 'No file selected';
+            updateButtonState();
+            return;
+        }
+        if (!f.name.toLowerCase().endsWith('.csv')) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid file',
+                text: 'Please select a .csv file.'
+            });
+            fileInput.value = '';
+            chosenFile = null;
+            selectedFileName.textContent = 'No file selected';
+        } else {
+            chosenFile = f;
+            selectedFileName.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+        }
+        updateButtonState();
+    });
+
+    // Drag & Drop
+    ['dragenter', 'dragover'].forEach(evt => dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('dragging');
+    }));
+    ['dragleave', 'drop'].forEach(evt => dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('dragging');
+    }));
+    dropZone.addEventListener('drop', (e) => {
+        const f = e.dataTransfer.files[0];
+        if (f && f.name.toLowerCase().endsWith('.csv')) {
+            chosenFile = f;
+            selectedFileName.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+            // Programmatically set input for form validity
+            const dt = new DataTransfer();
+            dt.items.add(f);
+            fileInput.files = dt.files;
+            updateButtonState();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid file',
+                text: 'Please drop a .csv file.'
+            });
+        }
+    });
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Template download (generate on the fly based on type)
+    templateBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const t = dataType.value || 'Historical Sales';
+        const samples = {
+            'Historical Sales': 'date,product_id,store_id,units_sold,price\n2024-01-01,P100,ST01,42,3.99\n2024-01-02,P100,ST01,37,3.99\n',
+            'Products': 'product_id,name,category,uom,active\nP100,Orange Juice 1L,Beverages,EA,true\nP200,Granola Bars 6pk,Snacks,EA,true\n',
+            'Promotions': 'promo_id,product_id,start_date,end_date,discount_type,discount_value\nPRM001,P100,2024-02-01,2024-02-07,PCT,10\nPRM002,P200,2024-02-10,2024-02-14,AMT,1.00\n',
+            'Holidays': 'date,region,holiday_name\n2024-01-01,US,New Year\n2024-07-04,US,Independence Day\n'
+        };
+        const content = samples[t] || samples['Historical Sales'];
+        const blob = new Blob([content], {
+            type: 'text/csv;charset=utf-8;'
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = t.replace(/\s+/g, '_').toLowerCase() + '_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+
+    // Form submit mock
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (uploadBtn.disabled) return;
+
+        // UI: working state
+        uploadBtn.disabled = true;
+        btnLabel.classList.add('d-none');
+        btnWorking.classList.remove('d-none');
+        progressWrap.classList.remove('d-none');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+
+        // Simulate upload progress
+        let p = 0;
+        const interval = setInterval(() => {
+            p = Math.min(95, p + Math.floor(Math.random() * 15 + 5));
+            progressBar.style.width = p + '%';
+            progressBar.textContent = p + '%';
+        }, 300);
+
+        // Mock API call
+        const simulate = () => new Promise((resolve) => {
+            setTimeout(() => {
+                const ok = Math.random() > 0.15; // 85% success
+                resolve({
+                    ok,
+                    rows: Math.floor(Math.random() * 3000) + 500,
+                    errors: ok ? 0 : Math.floor(Math.random() * 8) + 1
+                });
+            }, 1800 + Math.random() * 1200);
+        });
+
+        const result = await simulate();
+        clearInterval(interval);
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+
+        // Show feedback
+        const msgSuccess = `File processed successfully. ${result.rows.toLocaleString()} rows ingested.`;
+        const msgError = `Upload failed. Error in row 45: Invalid product ID. (${result.errors} issues)`;
+
+        if (result.ok) {
+            showAlert('success', msgSuccess);
+            Swal.fire({
+                icon: 'success',
+                title: 'Upload Complete',
+                text: msgSuccess,
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-success') || '#198754'
+            });
+            // Prepend to table
+            addUploadRow({
+                type: dataType.value,
+                file: chosenFile ? chosenFile.name : 'file.csv',
+                rows: result.rows,
+                errors: 0,
+                status: 'Success',
+                date: new Date()
+            });
+            updateChart();
+        } else {
+            showAlert('danger', msgError);
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Failed',
+                text: msgError
+            });
+            addUploadRow({
+                type: dataType.value,
+                file: chosenFile ? chosenFile.name : 'file.csv',
+                rows: 0,
+                errors: result.errors,
+                status: 'Error',
+                date: new Date()
+            });
+        }
+
+        // Reset working state
+        btnLabel.classList.remove('d-none');
+        btnWorking.classList.add('d-none');
+        progressWrap.classList.add('d-none');
+        uploadBtn.disabled = !(dataType.value && chosenFile);
+    });
+
+    function showAlert(kind, text) {
+        uploadAlert.className = 'alert alert-' + (kind === 'success' ? 'success' : kind);
+        uploadAlert.innerHTML = `<div class="d-flex align-items-start gap-2"><i class="fa-solid ${kind==='success'?'fa-circle-check':'fa-triangle-exclamation'} mt-1"></i><div>${text}</div><button type="button" class="btn-close ms-auto" aria-label="Close"></button></div>`;
+        uploadAlert.classList.remove('d-none');
+        const closer = uploadAlert.querySelector('.btn-close');
+        closer.addEventListener('click', () => uploadAlert.classList.add('d-none'));
+    }
+
+    // Mock data for recent uploads
+    const mockUploads = [{
+        type: 'Historical Sales',
+        file: 'sales_jan.csv',
+        rows: 18234,
+        errors: 0,
+        status: 'Success',
+        date: new Date('2025-01-20T10:12:00')
+    }, {
+        type: 'Products',
+        file: 'products_2025_01.csv',
+        rows: 820,
+        errors: 2,
+        status: 'Warning',
+        date: new Date('2025-01-18T15:40:00')
+    }, {
+        type: 'Promotions',
+        file: 'promo_q1.csv',
+        rows: 120,
+        errors: 0,
+        status: 'Success',
+        date: new Date('2025-01-17T09:05:00')
+    }, {
+        type: 'Holidays',
+        file: 'holidays_us.csv',
+        rows: 28,
+        errors: 0,
+        status: 'Success',
+        date: new Date('2025-01-15T13:22:00')
+    }, {
+        type: 'Historical Sales',
+        file: 'sales_dec.csv',
+        rows: 20110,
+        errors: 0,
+        status: 'Success',
+        date: new Date('2025-01-12T18:11:00')
+    }, {
+        type: 'Products',
+        file: 'products_legacy.csv',
+        rows: 720,
+        errors: 6,
+        status: 'Error',
+        date: new Date('2025-01-10T08:47:00')
+    }, ];
+
+    const tbody = document.getElementById('uploadsTbody');
+
+    function statusBadge(s) {
+        const map = {
+            Success: 'success',
+            Warning: 'warning',
+            Error: 'danger'
+        };
+        const label = s;
+        return `<span class="badge-soft ${s==='Error'?'error':(s==='Warning'?'warning':'success')}"><i class="fa-solid ${s==='Success'?'fa-circle-check':(s==='Warning'?'fa-circle-exclamation':'fa-circle-xmark')} me-1"></i>${label}</span>`;
+    }
+
+    function formatDate(d) {
+        return d.toLocaleString();
+    }
+
+    function toRow(u) {
+        return `<tr>
+          <td>${u.type}</td>
+          <td><i class="fa-solid fa-file-csv text-success me-1"></i>${u.file}</td>
+          <td class="text-end">${u.rows.toLocaleString()}</td>
+          <td class="text-end">${u.errors}</td>
+          <td>${statusBadge(u.status)}</td>
+          <td>${formatDate(u.date)}</td>
+          <td>
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-light" title="View Log"><i class="fa-regular fa-file-lines"></i></button>
+              ${u.errors>0?`<button class="btn btn-warning" title="Download errors CSV"><i class="fa-solid fa-triangle-exclamation"></i></button>`:''}
+              <button class="btn btn-info" title="Reprocess"><i class="fa-solid fa-arrows-rotate"></i></button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    function renderTable(list) {
+        tbody.innerHTML = list.map(toRow).join('');
+    }
+    renderTable(mockUploads);
+
+    // Sorting & Filtering
+    let currentSort = {
+        key: null,
+        asc: true
+    };
+
+    function sortData(key) {
+        const copy = [...mockUploads];
+        copy.sort((a, b) => {
+            let va = a[key],
+                vb = b[key];
+            if (key === 'date') {
+                va = a.date.getTime();
+                vb = b.date.getTime();
+            }
+            if (typeof va === 'string') {
+                va = va.toLowerCase();
+                vb = vb.toLowerCase();
+            }
+            if (va < vb) return currentSort.asc ? -1 : 1;
+            if (va > vb) return currentSort.asc ? 1 : -1;
+            return 0;
+        });
+        return copy;
+    }
+    document.querySelectorAll('#uploadsTable thead th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const keyMap = {
+                type: 'type',
+                file: 'file',
+                rows: 'rows',
+                errors: 'errors',
+                status: 'status',
+                date: 'date'
+            };
+            const k = th.getAttribute('data-sort');
+            currentSort.asc = currentSort.key === k ? !currentSort.asc : true;
+            currentSort.key = k;
+            const sorted = sortData(keyMap[k]);
+            renderTable(applyFilter(sorted));
+        });
+    });
+    const filterText = document.getElementById('filterText');
+    const filterStatus = document.getElementById('filterStatus');
+
+    function applyFilter(list) {
+        const t = filterText.value.trim().toLowerCase();
+        const s = filterStatus.value;
+        return list.filter(u => {
+            const textMatch = !t || (u.file.toLowerCase().includes(t) || u.type.toLowerCase().includes(t));
+            const statusMatch = !s || u.status === s;
+            return textMatch && statusMatch;
+        });
+    }
+
+    function refreshTable() {
+        const base = currentSort.key ? sortData(currentSort.key) : [...mockUploads];
+        renderTable(applyFilter(base));
+    }
+    filterText.addEventListener('input', refreshTable);
+    filterStatus.addEventListener('change', refreshTable);
+
+    // Add row after successful/failed upload
+    function addUploadRow(row) {
+        mockUploads.unshift(row);
+        refreshTable();
+    }
+
+    // Chart.js setup
+    const ctx = document.getElementById('ingestChart');
+    const chartData = () => {
+        const last7 = mockUploads.slice(0, 7);
+        return {
+            labels: last7.map(u => u.file),
+            datasets: [{
+                label: 'Rows ingested',
+                data: last7.map(u => u.rows),
+                backgroundColor: 'rgba(240,142,27,0.35)',
+                borderColor: 'rgba(240,142,27,1)',
+                borderWidth: 1,
+                hoverBackgroundColor: 'rgba(240,142,27,0.55)'
+            }]
+        };
+    };
+    const ingestChart = new Chart(ctx, {
+        type: 'bar',
+        data: chartData(),
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
+
+    function updateChart() {
+        ingestChart.data = chartData();
+        ingestChart.update();
+    }
+});
+  </script>
+ </body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Admin Dashboard | Sales Forecasting Admin
+  </title>
+  <!-- Poppins Typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <!-- Bootstrap 5 CSS -->
+  <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet"/>
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+   <!-- Global Theme CSS -->
+   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Page-specific CSS -->
+    <link href="{{ url_for('static', filename='css/admin_dashboard.css') }}" rel="stylesheet"/>
+   </link>
+  </link>
+ </head>
+ <body class="d-flex flex-column min-vh-100">
+  <!-- ADMIN COMPONENT: Header (fixed at top) -->
+  <style>
+   .admin-navbar { background-color: var(--primary); }
+    .admin-navbar .nav-link, .admin-navbar .navbar-brand, .admin-navbar .navbar-text { color:#fff; }
+    .admin-navbar .nav-link:hover { color:#212529; background: rgba(255,255,255,.2); border-radius:.375rem; }
+    .badge-dot { width:8px; height:8px; background:#dc3545; border-radius:50%; display:inline-block; margin-left:-6px; margin-top:-6px; position:absolute; }
+  </style>
+  <nav class="navbar navbar-expand-lg admin-navbar py-2 sticky-top">
+   <div class="container-fluid">
+    <button aria-controls="appSidebar" aria-label="Toggle sidebar" class="btn btn-light d-lg-none me-2" data-bs-target="#appSidebar" data-bs-toggle="offcanvas" type="button">
+     <i class="fa-solid fa-bars">
+     </i>
+    </button>
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+     <img alt="Logo" class="me-2" onerror="this.onerror=null;this.src='https://picsum.photos/seed/adminlogo/28/28';" src="https://dsaishared.blob.core.windows.net/uxcceleratecontainer/projects/68a81bcf3010074de4818175/logos/logo_32990785-4b39-4b20-94b8-b390fa991550.jpg" style="height:28px;width:28px;border-radius:.25rem;object-fit:cover;"/>
+     Admin
+    </a>
+    <div class="d-none d-lg-flex flex-grow-1 mx-3">
+     <form action="{{ url_for('admin_dashboard') }}" class="w-50" method="GET" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" name="q" placeholder="Search products, users, models…" type="search"/>
+      </div>
+     </form>
+    </div>
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-light btn-sm" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-1">
+       </i>
+       Upload Data
+      </a>
+     </li>
+     <li class="nav-item d-none d-lg-block">
+      <a class="btn btn-dark btn-sm" href="{{ url_for('model_management') }}#train" id="headerTrainBtn" style="background-color: var(--secondary); border-color: var(--secondary);">
+       <i class="fa-solid fa-rocket me-1">
+       </i>
+       Train Model
+      </a>
+     </li>
+     <li class="nav-item dropdown">
+      <a aria-expanded="false" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#" role="button">
+       <span class="avatar rounded-circle bg-dark d-inline-flex justify-content-center align-items-center me-2" style="width:28px;height:28px;">
+        <i class="fa-solid fa-user-gear text-white small">
+        </i>
+       </span>
+       <span class="d-none d-sm-inline" id="currentUserName">
+        {{ current_user }}
+       </span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+       <li>
+        <h6 class="dropdown-header">
+         Admin
+        </h6>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}#settings">
+         <i class="fa-solid fa-gear me-2">
+         </i>
+         Settings
+        </a>
+       </li>
+       <li>
+        <hr class="dropdown-divider"/>
+       </li>
+       <li>
+        <a class="dropdown-item" href="{{ url_for('logout') }}">
+         <i class="fa-solid fa-right-from-bracket me-2">
+         </i>
+         Logout
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+  </nav>
+  <!-- ADMIN COMPONENT: Offcanvas Sidebar (persistent on lg+) -->
+  <style>
+   .admin-sidebar { background-color: #fff; box-shadow: 0 0 16px rgba(0,0,0,.15); }
+    .admin-sidebar .nav-link { color: var(--text-muted); border-radius:.375rem; transition: background .15s ease, color .15s ease; }
+    .admin-sidebar .nav-link.active { background-color: var(--primary); color:#fff; font-weight: 500; }
+    .admin-sidebar .nav-link:hover:not(.active) { background: rgba(0,0,0,.05); color: var(--text); }
+  </style>
+  <div class="offcanvas-lg offcanvas-start admin-sidebar d-flex flex-column" data-bs-scroll="true" id="appSidebar" tabindex="-1">
+   <div class="offcanvas-header border-bottom">
+    <div class="d-flex align-items-center">
+     <h5 class="offcanvas-title me-2" id="offcanvasLabel">
+      <i class="fa-solid fa-chart-line me-1">
+      </i>
+      ACME Sales Forecast
+     </h5>
+     <span class="badge rounded-pill text-bg-secondary fw-normal">
+      v1.0
+     </span>
+    </div>
+    <button aria-label="Close" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" type="button">
+    </button>
+   </div>
+   <div class="offcanvas-body d-flex flex-column flex-grow-1 p-3">
+    <div class="d-grid mb-3 d-lg-none">
+     <form action="{{ url_for('admin_dashboard') }}" method="GET" role="search">
+      <div class="input-group">
+       <span class="input-group-text">
+        <i class="fa-solid fa-magnifying-glass">
+        </i>
+       </span>
+       <input aria-label="Search" class="form-control" name="q" placeholder="Search…" type="search"/>
+      </div>
+     </form>
+    </div>
+    <ul class="nav nav-pills flex-column mb-auto gap-1">
+     <li class="nav-item">
+      <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+       <i class="fa-solid fa-chart-pie me-2">
+       </i>
+       Dashboard
+      </a>
+     </li>
+     <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('product_management') }}">
+       <i class="fa-solid fa-boxes-stacked me-2">
+       </i>
+       Products
+      </a>
+     </li>
+     <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('model_management') }}">
+        <i class="fa-solid fa-robot me-2"></i>
+        Model Management
+      </a>
+     </li>
+     <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('user_management') }}">
+       <i class="fa-solid fa-users me-2">
+       </i>
+       User Management
+      </a>
+     </li>
+     <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('upload_page') }}">
+       <i class="fa-solid fa-file-arrow-up me-2">
+       </i>
+       Upload Data
+      </a>
+     </li>
+    </ul>
+    <div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+     <small class="text-muted">
+      ACME Sales Forecast
+     </small>
+     <small class="text-muted">
+      v1.0
+     </small>
+    </div>
+   </div>
+  </div>
+  <!-- Main content area -->
+  <main class="with-sidebar">
+   <div class="container-fluid p-4">
+    <h1 class="page-title h3 mb-4">
+     Admin Dashboard
+    </h1>
+    <!-- Page content row 1 -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-4 text-center">
+     <div class="col">
+      <a class="click-card text-decoration-none" href="{{ url_for('product_management') }}" title="View Product Management">
+       <div class="card metric-card h-100">
+        <div class="card-body">
+         <h4 class="card-title text-muted fw-normal">
+          Total Products
+         </h4>
+         <p class="display-3 fw-light m-0">
+          {{ total_products }}
+         </p>
+        </div>
+       </div>
+      </a>
+     </div>
+     <div class="col">
+      <a class="click-card text-decoration-none" href="{{ url_for('model_management') }}" title="View Model Management">
+       <div class="card metric-card h-100">
+        <div class="card-body">
+         <h4 class="card-title text-muted fw-normal">
+          Total Models
+         </h4>
+         <p class="display-3 fw-light m-0">
+          {{ total_models }}
+         </p>
+        </div>
+       </div>
+      </a>
+     </div>
+     <div class="col">
+      <a class="click-card text-decoration-none" href="{{ url_for('user_management') }}" title="View User Management">
+       <div class="card metric-card h-100">
+        <div class="card-body">
+         <h4 class="card-title text-muted fw-normal">
+          Total Users
+         </h4>
+         <p class="display-3 fw-light m-0">
+          {{ total_users }}
+         </p>
+        </div>
+       </div>
+      </a>
+     </div>
+     <div class="col">
+      <a class="click-card text-decoration-none" href="{{ url_for('upload_page') }}" title="View Data Uploads">
+       <div class="card metric-card h-100">
+        <div class="card-body">
+         <h4 class="card-title text-muted fw-normal">
+          Last Upload
+         </h4>
+         <p class="display-3 fw-light m-0" id="totalUploads">
+          {{ last_upload_date }}
+         </p>
+        </div>
+       </div>
+      </a>
+     </div>
+    </div>
+    <!-- Page content row 2 -->
+    <div class="row g-4 mb-4">
+     <div class="col-12 col-xl-8">
+      <div class="card chart-card">
+       <div class="card-header d-flex align-items-center">
+        <h5 class="card-title h6 m-0">
+         Forecast Accuracy Over Time
+        </h5>
+       </div>
+       <div class="card-body">
+        <canvas id="accuracyChart">
+        </canvas>
+       </div>
+      </div>
+     </div>
+     <div class="col-12 col-xl-4">
+      <div class="card metric-card h-100">
+       <div class="card-body">
+        <h4 class="card-title text-muted fw-normal">
+         Active Model
+        </h4>
+        <p class="h5 m-0 mb-2">
+         {{ active_model_info.name }}
+        </p>
+        <p class="small text-muted">
+         Trained on: {{ active_model_info.date }}
+        </p>
+        <hr/>
+        <h4 class="card-title text-muted fw-normal">
+         Next Training Due
+        </h4>
+        <p class="h5 m-0 text-success">
+         Oct 30, 2024
+        </p>
+       </div>
+      </div>
+     </div>
+    </div>
+    <!-- Page content row 3 -->
+    <div class="row g-4">
+     <div class="col-12">
+      <div class="card">
+       <div class="card-header d-flex align-items-center">
+        <h5 class="card-title h6 m-0">
+         Recent Uploads
+        </h5>
+        <div class="ms-auto d-flex gap-2">
+         <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('upload_page') }}">
+          <i class="fa-solid fa-file-arrow-up me-1">
+          </i>
+          View all uploads
+         </a>
+        </div>
+       </div>
+       <div class="table-responsive">
+        <table class="table table-hover table-sortable m-0" id="recentUploadsTable">
+         <thead>
+          <tr>
+           <th class="text-muted" data-sort="file" role="button">
+            File
+            <span class="sort-ind asc">
+             <i class="fa-solid fa-arrow-up">
+             </i>
+            </span>
+            <span class="sort-ind desc">
+             <i class="fa-solid fa-arrow-down">
+             </i>
+            </span>
+           </th>
+           <th class="text-muted" data-sort="records" role="button">
+            Records
+            <span class="sort-ind asc">
+             <i class="fa-solid fa-arrow-up">
+             </i>
+            </span>
+            <span class="sort-ind desc">
+             <i class="fa-solid fa-arrow-down">
+             </i>
+            </span>
+           </th>
+           <th class="text-muted" data-sort="date" role="button">
+            Date
+            <span class="sort-ind asc">
+             <i class="fa-solid fa-arrow-up">
+             </i>
+            </span>
+            <span class="sort-ind desc">
+             <i class="fa-solid fa-arrow-down">
+             </i>
+            </span>
+           </th>
+           <th class="text-muted text-end">
+            Actions
+           </th>
+          </tr>
+         </thead>
+         <tbody id="recentUploadsTbody">
+         </tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <!-- Main content end -->
+  </main>
+  <!-- ADMIN COMPONENT: Footer -->
+  <footer class="mt-auto py-3">
+   <div class="container-fluid text-center text-muted">
+    <small>
+     <i class="fa-solid fa-copyright">
+     </i>
+     2024 ACME Inc. All rights reserved.
+    </small>
+   </div>
+  </footer>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js">
+  </script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.7/dist/sweetalert2.all.min.js">
+  </script>
+  <!-- Page-specific JS -->
+  <script>
+   const els = {
+    accuracyChart: document.getElementById('accuracyChart'),
+    recentUploadsTbody: document.getElementById('recentUploadsTbody')
+};
+
+// Fetch chart data from Flask API
+async function fetchChartData() {
+    try {
+        const response = await fetch('{{ url_for("api_admin_dashboard_charts") }}');
+        if (!response.ok) throw new Error('Failed to fetch chart data');
+        const data = await response.json();
+        renderAccuracyChart(data.accuracyChart);
+    } catch (error) {
+        console.error('Error fetching dashboard chart data:', error);
+        // Fallback to static demo data or show error message
+        renderAccuracyChart({ labels: ['Jan', 'Feb', 'Mar'], datasets: [{ label: 'Error', data: [0,0,0] }] });
+    }
+}
+
+// Render Accuracy Chart
+function renderAccuracyChart(chartData) {
+    new Chart(els.accuracyChart, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Forecast Accuracy (%)',
+                data: chartData.datasets[0].data,
+                borderColor: '#007bff', // Bootstrap primary blue
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Accuracy (%)'
+                    },
+                    min: 80,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+
+// Fetch and render recent uploads table
+async function fetchRecentUploads() {
+    try {
+        const response = await fetch('{{ url_for("api_admin_get_latest_uploads") }}');
+        if (!response.ok) throw new Error('Failed to fetch recent uploads');
+        const uploads = await response.json();
+        renderUploadsTable(uploads);
+    } catch (error) {
+        console.error('Error fetching recent uploads:', error);
+        els.recentUploadsTbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load recent uploads.</td></tr>';
+    }
+}
+
+// Function to render table rows
+function renderUploadsTable(uploads) {
+    const tbody = els.recentUploadsTbody;
+    tbody.innerHTML = '';
+    if (uploads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent uploads found.</td></tr>';
+        return;
+    }
+
+    uploads.forEach(upload => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${upload.name}</td>
+            <td>${upload.records}</td>
+            <td>${upload.date.split(' ')[0]}<br><small class="text-muted">${upload.date.split(' ')[1]}</small></td>
+            <td class="text-end">
+                <a href="#" class="btn btn-sm btn-outline-info view-details" data-file="${upload.name}" data-id="${upload.id}" data-records="${upload.records}" data-date="${upload.date}">View</a>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Re-attach event listeners for "View Details" buttons
+    document.querySelectorAll('.view-details').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default link behavior
+            const file = btn.getAttribute('data-file');
+            const records = btn.getAttribute('data-records');
+            const date = btn.getAttribute('data-date');
+            Swal.fire({
+                title: 'Upload Details',
+                html: `<div class="text-start">` +
+                    `<div><strong>File:</strong> ${file}</div>` +
+                    `<div><strong>Records:</strong> ${records}</div>` +
+                    `<div><strong>Date:</strong> ${date}</div>` +
+                    `</div>`,
+                icon: 'info',
+                confirmButtonText: 'Close'
+            });
+        });
+    });
+}
+
+// Table sorting logic (simplified for demo, assumes data is already loaded and sorted for actual API calls)
+document.addEventListener('DOMContentLoaded', () => {
+    fetchChartData(); // Fetch and render chart data
+    fetchRecentUploads(); // Fetch and render recent uploads
+
+    const table = document.getElementById('recentUploadsTable');
+    if (table) { // Check if table exists before adding event listeners
+        const headers = table.querySelectorAll('th[data-sort]');
+        const tbody = table.querySelector('tbody');
+        let sortState = {
+            key: 'date',
+            asc: false
+        };
+
+        headers.forEach((header, index) => {
+            header.addEventListener('click', () => {
+                const key = header.getAttribute('data-sort');
+                const newAsc = sortState.key === key ? !sortState.asc : true;
+                sortState = { key, asc: newAsc };
+
+                // Update header classes for styling
+                headers.forEach(h => h.classList.remove('asc', 'desc', 'active'));
+                header.classList.add('active', newAsc ? 'asc' : 'desc');
+
+                // This part would ideally re-fetch data from API with sort parameters
+                // For this client-side demo, we'll re-sort the current rows if available
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                rows.sort((a, b) => compareCells(a.cells[index], b.cells[index], newAsc, key));
+                rows.forEach(r => tbody.appendChild(r));
+            });
+        });
+    }
+
+    // Function to compare cells for sorting
+    function compareCells(aCell, bCell, asc, key) {
+        const aText = (aCell?.innerText || '').trim();
+        const bText = (bCell?.innerText || '').trim();
+        let aVal = aText,
+            bVal = bText;
+
+        if (key === 'records') {
+            aVal = parseInt(aText.replace(/[^\\d]/g, ''), 10);
+            bVal = parseInt(bText.replace(/[^\\d]/g, ''), 10);
+        } else if (key === 'date') {
+            // Dates are already in YYYY-MM-DD format, so direct comparison works
+            aVal = new Date(aText.split(' ')[0]);
+            bVal = new Date(bText.split(' ')[0]);
+        } else {
+            aVal = aText.toLowerCase();
+            bVal = bText.toLowerCase();
+        }
+
+        if (aVal < bVal) return asc ? -1 : 1;
+        if (aVal > bVal) return asc ? 1 : -1;
+        return 0;
+    }
+});
+  </script>
+ </body>
+</html>

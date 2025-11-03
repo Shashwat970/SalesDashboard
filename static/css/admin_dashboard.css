@@ -1,0 +1,57 @@
+/* Admin Dashboard - Page Specific Styles */
+/* Typography override to use Poppins as brand font while keeping fallback */
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+/* Reserve space for offcanvas sidebar on large screens */
+.admin-sidebar {
+    --bs-offcanvas-width: 260px
+    }
+@media (min-width: 992px) {
+    .with-sidebar {
+        padding-left: 260px
+        }
+    }
+/* Clickable metric cards */
+.click-card .metric-card {
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease
+    }
+.click-card .metric-card:hover {
+    transform: translatey(-2px);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-2)
+    }
+/* Chart card height control */
+.chart-card .card-body {
+    height: 320px
+    }
+.chart-card canvas {
+    width: 100% !important;
+    height: 100% !important
+    }
+/* Sortable table headers */
+.table-sortable th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap
+    }
+.table-sortable th .sort-ind {
+    opacity: 0.35;
+    margin-left: 4px
+    }
+.table-sortable th.active .sort-ind {
+    opacity: 1;
+    color: var(--color-primary)
+    }
+/* Quick actions */
+.quick-actions .btn {
+    min-width: 180px
+    }
+/* Toast visual refinement */
+.toast {
+    box-shadow: var(--shadow-2)
+    }
+/* Breadcrumb spacing tweak */
+.page-header .breadcrumb {
+    margin-top: 0.25rem
+    }

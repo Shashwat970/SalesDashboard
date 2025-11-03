@@ -1,0 +1,47 @@
+/* upload_page.css - Page-specific styles for Data Upload page */
+/* Use brand typography */
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+/* Sidebar width and main content shift on lg+ */
+.admin-sidebar {
+    --bs-offcanvas-width: 260px
+    }
+@media (min-width: 992px) {
+    .main-wrap {
+        margin-left: 260px
+        }
+    }
+/* Dropzone styling */
+.dropzone {
+    border: 2px dashed var(--border-color);
+    background: var(--neutral-soft);
+    transition: background-color 0.2s ease, border-color 0.2s ease
+    }
+.dropzone.dragging {
+    border-color: var(--color-info);
+    background: var(--info-soft)
+    }
+/* Upload card adjustments */
+.upload-card .card-header .title i {
+    color: var(--color-primary)
+    }
+.upload-card .card-footer {
+    font-size: var(--font-size-sm)
+    }
+/* Sortable table headers */
+#uploadsTable thead th.sortable:hover {
+    background: var(--neutral-soft)
+    }
+/* Align pagination */
+.pagination .page-link {
+    padding: 0.25rem 0.5rem
+    }
+/* Chart canvas area */
+#ingestChart {
+    min-height: 200px
+    }
+/* Alert spacing */
+#uploadAlert {
+    margin-bottom: 1rem
+    }

@@ -1,0 +1,64 @@
+/* forecast_dashboard.css - Page specific styles for Forecast Dashboard */
+/* Use Poppins as brand font on this page */
+body {
+    font-family: "Poppins", var(--font-sans)
+    }
+/* Reserve space for the persistent offcanvas sidebar on lg+ */
+@media (min-width: 992px) {
+    #appSidebar.offcanvas {
+        --bs-offcanvas-width: 248px
+        }
+    .with-sidebar {
+        margin-left: 248px
+        }
+    }
+/* Chart area sizing */
+#chartContainer {
+    height: 420px;
+    min-height: 360px
+    }
+#forecastChart {
+    width: 100%;
+    height: 100%
+    }
+/* Loading overlay over chart */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: grid;
+    place-items: center;
+    z-index: 2
+    }
+/* Interactive table headers */
+#previewTable thead th[role="button"] {
+    cursor: pointer;
+    user-select: none
+    }
+#previewTable thead th[role="button"]:hover {
+    background: var(--neutral-soft)
+    }
+/* Breadcrumb fade in */
+.breadcrumb {
+    animation: fadeIn 0.2s ease-in
+    }
+@keyframes fadeIn {
+    from {
+        opacity: 0
+        } to {
+        opacity: 1
+        }
+    }
+/* Improve spacing within cards */
+.card .form-text {
+    margin-top: 0.25rem
+    }
+/* Small refinement for the badge in header */
+/* Make offcanvas body scroll independent if content grows */
+.user-sidebar .offcanvas-body {
+    overflow-y: auto
+    }
+/* Ensure footer sticks at bottom with main content stretching */
+.with-sidebar .container-fluid {
+    padding-bottom: 0.25rem
+    }

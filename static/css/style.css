@@ -1,0 +1,286 @@
+/* style.css - Global Theme Styles */
+
+:root {
+    /* Primary Colors */
+    --primary: #f08e1b;   /* Orange-ish */
+    --primary-rgb: 240, 142, 27;
+    --primary-soft: #fff7ed; /* Light orange for badges/backgrounds */
+
+    /* Secondary Colors */
+    --secondary: #9a296a; /* Purple-ish */
+    --secondary-rgb: 154, 41, 106;
+    --secondary-soft: #fcf4f8; /* Light purple */
+
+    /* Accent/Status Colors */
+    --info: #0099D2; /* Blue */
+    --info-rgb: 0, 153, 210;
+    --info-soft: #e0f6ff;
+
+    --success: #00774E; /* Green */
+    --success-rgb: 0, 119, 78;
+    --success-soft: #dffbed;
+
+    --warning: #ffc107; /* Yellow */
+    --warning-rgb: 255, 193, 7;
+    --warning-soft: #fff8e1;
+
+    --danger: #CD2026; /* Red */
+    --danger-rgb: 205, 32, 38;
+    --danger-soft: #feebeb;
+
+    /* Neutral Colors */
+    --neutral-light: #f8f9fa; /* Bootstrap light */
+    --neutral-soft: #e9ecef; /* Bootstrap secondary bg */
+    --neutral-mid: #adb5bd; /* Bootstrap text muted */
+    --neutral-dark: #343a40; /* Bootstrap dark */
+
+    /* Text Colors */
+    --text: #212529; /* Dark gray for general text */
+    --text-muted: #6c757d;
+    --text-strong: #000;
+
+    /* Font Family */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+    /* Shadows */
+    --shadow-1: 0 .125rem .25rem rgba(0,0,0,.075);
+    --shadow-2: 0 .25rem .75rem rgba(0,0,0,.08);
+
+    /* Z-index */
+    --z-toast: 1080;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background-color: var(--neutral-light);
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-primary:hover {
+    background-color: #e07f0f; /* Slightly darker */
+    border-color: #e07f0f;
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+.btn-secondary:hover {
+    background-color: #8c245f; /* Slightly darker */
+    border-color: #8c245f;
+}
+
+/* Custom badge styles for softer appearance */
+.badge-soft {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text-strong);
+    background-color: var(--neutral-soft);
+    border-radius: 0.375rem;
+    white-space: nowrap;
+}
+
+.badge-soft.primary {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+}
+.badge-soft.secondary {
+    background-color: var(--secondary-soft);
+    color: var(--secondary);
+}
+.badge-soft.info {
+    background-color: var(--info-soft);
+    color: var(--info);
+}
+.badge-soft.success {
+    background-color: var(--success-soft);
+    color: var(--success);
+}
+.badge-soft.warning {
+    background-color: var(--warning-soft);
+    color: var(--warning);
+}
+.badge-soft.danger {
+    background-color: var(--danger-soft);
+    color: var(--danger);
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+.status-dot.success { background-color: var(--success); }
+.status-dot.warning { background-color: var(--warning); }
+.status-dot.error { background-color: var(--danger); }
+
+/* Card styles */
+.app-card {
+    border-radius: 0.5rem;
+    border: none;
+    box-shadow: var(--shadow-1);
+}
+.app-card .card-header {
+    background-color: #fff;
+    border-bottom: 1px solid var(--neutral-soft);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.app-card .card-header .title {
+    font-weight: 600;
+    color: var(--text-strong);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.app-card .card-header .widget-title {
+    font-size: 1.125rem;
+}
+.app-card .card-body {
+    padding: 1.25rem;
+}
+.app-card .card-footer {
+    background-color: #fff;
+    border-top: 1px solid var(--neutral-soft);
+    padding: 1rem 1.25rem;
+}
+
+
+/* Page header styling */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.page-header .page-title {
+    font-weight: 600;
+    color: var(--text-strong);
+}
+.page-header .breadcrumb {
+    padding-left: 0;
+    background-color: transparent;
+    font-size: 0.9em;
+}
+.page-header .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-muted);
+}
+.page-header .breadcrumb-item a {
+    color: var(--neutral-mid);
+}
+.page-header .breadcrumb-item.active {
+    color: var(--text-strong);
+    font-weight: 500;
+}
+
+/* Metric Cards */
+.metric-card {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.metric-card .metric-title {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+.metric-card .metric-value {
+    font-size: 2.5rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--text-strong);
+}
+
+/* Table styling */
+.table-theme {
+    --bs-table-bg: #fff;
+    --bs-table-hover-bg: var(--neutral-soft);
+    font-size: 0.9rem;
+}
+.table-theme thead th {
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--neutral-soft);
+    padding: 0.75rem 1.25rem;
+}
+.table-theme tbody td {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--neutral-soft);
+}
+
+/* View switcher (for table/grid options etc.) */
+.view-switcher {
+    display: inline-flex;
+    border: 1px solid var(--neutral-soft);
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+.view-switcher .option {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.view-switcher .option:hover:not(.active) {
+    background-color: var(--neutral-soft);
+    color: var(--text-strong);
+}
+.view-switcher .option.active {
+    background-color: var(--primary);
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Skeleton loader styles */
+.skeleton {
+    animation: skeleton-loading 1s linear infinite alternate;
+    background-color: #e2e2e2;
+    border-radius: 4px;
+    width: 100%;
+    height: 1em;
+}
+.skeleton-circle {
+    border-radius: 50%;
+}
+@keyframes skeleton-loading {
+    0% {
+        background-color: hsl(200, 20%, 80%);
+    }
+    100% {
+        background-color: hsl(200, 20%, 95%);
+    }
+}
