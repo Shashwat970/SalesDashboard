@@ -195,19 +195,21 @@ def api_admin_get_product(product_db_id):
 def api_admin_add_product():
     """API to add a new product."""
     data = request.get_json()
-    # Basic validation
-    if not all(key in data for key in ['product_id', 'name', 'category', 'price', 'stock']):
-        return jsonify({'error': 'Missing required fields for product'}), 400
+    required = ['product_id', 'name', 'category', 'price', 'stock']
+    if not all(k in data for k in required):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    data['date_added'] = datetime.now().strftime('%Y-%m-%d')
     try:
-        data['date_added'] = datetime.now().strftime('%Y-%m-%d')
-        new_id = data_manager.add_product(data)
+        new_id = data_manager.add_product(data)   # <-- now returns id
         product = data_manager.get_product_by_id(new_id)
         if product:
             product['price'] = float(product['price'])
             return jsonify(product), 201
-        return jsonify({'error': 'Failed to retrieve newly added product'}), 500
+        return jsonify({'error': 'Insert succeeded but row not found'}), 500
     except Exception as e:
-        return jsonify({'error': f'Database error: {str(e)}'}), 500
+        app.logger.exception("Add product failed")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/products/<int:product_db_id>', methods=['PUT'])
 @role_required('Admin')

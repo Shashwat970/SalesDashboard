@@ -3,6 +3,7 @@ import mysql.connector
 from mysql.connector import Error
 from flask import current_app, g
 from werkzeug.security import generate_password_hash
+from flask import current_app as app
 
 def get_db():
     """
@@ -156,5 +157,5 @@ def execute_db(query, args=()):
         return cursor.lastrowid
     except Error as e:
         db.rollback() # Rollback on error
-        print(f"Database execution error: {e}")
+        app.logger.error(f"Database execution error: {e}")
         raise # Re-raise the exception for upstream handling

@@ -521,550 +521,425 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
   </script>
   <script>
-   // State
-let products = [];
-let isLoading = true;
-let errorMessage = '';
-let currentPage = 1;
-const pageSize = 10;
-let sortColumn = 'dateAdded';
-let sortDirection = 'desc';
+    // === STATE ===
+    let products = [];
+    let isLoading = true;
+    let errorMessage = '';
+    let currentPage = 1;
+    const pageSize = 10;
+    let sortColumn = 'dateAdded';
+    let sortDirection = 'desc';
 
-const $tableBody = document.getElementById('tableBody');
-const $pagination = document.getElementById('pagination');
-const $paginationInfo = document.getElementById('paginationInfo');
-const $searchInput = document.getElementById('searchInput');
-const $globalSearch = document.getElementById('globalSearch');
-const $categoryFilter = document.getElementById('categoryFilter');
-const $sortSelect = document.getElementById('sortSelect');
-const $systemFeedback = document.getElementById('systemFeedback');
-const $feedbackText = document.getElementById('feedbackText');
+    const $tableBody = document.getElementById('tableBody');
+    const $pagination = document.getElementById('pagination');
+    const $paginationInfo = document.getElementById('paginationInfo');
+    const $searchInput = document.getElementById('searchInput');
+    const $globalSearch = document.getElementById('globalSearch');
+    const $categoryFilter = document.getElementById('categoryFilter');
+    const $sortSelect = document.getElementById('sortSelect');
+    const $systemFeedback = document.getElementById('systemFeedback');
+    const $feedbackText = document.getElementById('feedbackText');
 
-const currency = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-});
-const dateFmt = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-});
+    const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+    const dateFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
 
-function setYear() {
-    const y = document.getElementById('year-admin');
-    if (y) y.textContent = new Date().getFullYear();
-}
-
-// Mock load
-function loadProducts() {
-    isLoading = true;
-    renderTable();
-    setTimeout(() => {
-        // mock dataset
-        products = [{
-            product_id: 'P-1001',
-            product_name: 'Orange Juice 1L',
-            category: 'Beverages',
-            price: 3.49,
-            stock: 120,
-            dateAdded: '2025-02-02'
-        }, {
-            product_id: 'P-1002',
-            product_name: 'Whole Wheat Bread',
-            category: 'Bakery',
-            price: 2.29,
-            stock: 60,
-            dateAdded: '2025-01-18'
-        }, {
-            product_id: 'P-1015',
-            product_name: 'Greek Yogurt 500g',
-            category: 'Dairy',
-            price: 4.19,
-            stock: 80,
-            dateAdded: '2025-02-10'
-        }, {
-            product_id: 'P-1020',
-            product_name: 'Cheddar Cheese 200g',
-            category: 'Dairy',
-            price: 5.49,
-            stock: 45,
-            dateAdded: '2025-01-05'
-        }, {
-            product_id: 'P-1033',
-            product_name: 'Potato Chips - Sea Salt',
-            category: 'Snacks',
-            price: 1.99,
-            stock: 210,
-            dateAdded: '2025-02-14'
-        }, {
-            product_id: 'P-1040',
-            product_name: 'Sparkling Water 500ml',
-            category: 'Beverages',
-            price: 1.29,
-            stock: 150,
-            dateAdded: '2025-02-01'
-        }, {
-            product_id: 'P-1057',
-            product_name: 'Granola Bars (6 Pack)',
-            category: 'Snacks',
-            price: 3.99,
-            stock: 95,
-            dateAdded: '2025-01-28'
-        }, {
-            product_id: 'P-1061',
-            product_name: 'Bananas (1kg)',
-            category: 'Produce',
-            price: 1.49,
-            stock: 180,
-            dateAdded: '2025-02-11'
-        }, {
-            product_id: 'P-1072',
-            product_name: 'Apples (1kg)',
-            category: 'Produce',
-            price: 2.59,
-            stock: 140,
-            dateAdded: '2025-01-22'
-        }, {
-            product_id: 'P-1088',
-            product_name: 'Croissant (4 Pack)',
-            category: 'Bakery',
-            price: 3.29,
-            stock: 70,
-            dateAdded: '2025-02-08'
-        }, {
-            product_id: 'P-1102',
-            product_name: 'Almond Milk 1L',
-            category: 'Dairy',
-            price: 3.79,
-            stock: 110,
-            dateAdded: '2025-02-15'
-        }, {
-            product_id: 'P-1110',
-            product_name: 'Chocolate Cookies',
-            category: 'Snacks',
-            price: 2.49,
-            stock: 130,
-            dateAdded: '2025-01-30'
-        }];
-        isLoading = false;
-        errorMessage = '';
-        renderTable();
-        updateChart();
-    }, 800);
-}
-
-// Filtering, sorting, pagination helpers
-function applyFilters(data) {
-    const q = ($searchInput.value || '').trim().toLowerCase();
-    const category = $categoryFilter.value;
-    let out = data.filter(p => {
-        const matchQ = !q || p.product_id.toLowerCase().includes(q) || p.product_name.toLowerCase().includes(q);
-        const matchCat = !category || p.category === category;
-        return matchQ && matchCat;
-    });
-    return out;
-}
-
-function compare(a, b, col) {
-    const va = a[col];
-    const vb = b[col];
-    if (col === 'price' || col === 'stock') return va - vb;
-    if (col === 'dateAdded') return new Date(a.dateAdded) - new Date(b.dateAdded);
-    return String(va).localeCompare(String(vb), 'en', {
-        sensitivity: 'base'
-    });
-}
-
-function applySort(data) {
-    return data.slice().sort((a, b) => {
-        const res = compare(a, b, sortColumn);
-        return sortDirection === 'asc' ? res : -res;
-    });
-}
-
-function paginate(data) {
-    const total = data.length;
-    const totalPages = Math.max(1, Math.ceil(total / pageSize));
-    if (currentPage > totalPages) currentPage = totalPages;
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    const pageItems = data.slice(start, end);
-    return {
-        pageItems,
-        total,
-        totalPages,
-        start: start + 1,
-        end: Math.min(end, total)
-    };
-}
-
-function renderTable() {
-    // Skeleton when loading
-    if (isLoading) {
-        $tableBody.innerHTML = '';
-        for (let i = 0; i < 6; i++) {
-            $tableBody.insertAdjacentHTML('beforeend', `
-            <tr>
-              <td colspan="7"><div class="skeleton" style="height:18px;"></div></td>
-            </tr>`);
-        }
-        $paginationInfo.textContent = 'Loading products…';
-        $pagination.innerHTML = '';
-        return;
-    }
-    if (errorMessage) {
-        showSystemFeedback(errorMessage);
-    } else {
-        hideSystemFeedback();
-    }
-    const filtered = applyFilters(products);
-    const sorted = applySort(filtered);
-    const {
-        pageItems,
-        total,
-        totalPages,
-        start,
-        end
-    } = paginate(sorted);
-
-    // rows
-    $tableBody.innerHTML = pageItems.map(p => `
-        <tr>
-          <td><span class="text-muted">${p.product_id}</span></td>
-          <td><span class="fw-semibold">${escapeHtml(p.product_name)}</span></td>
-          <td><span class="badge-soft primary">${p.category}</span></td>
-          <td class="text-end">${currency.format(p.price)}</td>
-          <td class="text-end">${p.stock.toLocaleString()}</td>
-          <td>${dateFmt.format(new Date(p.dateAdded))}</td>
-          <td class="text-center">
-            <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-light" title="Edit" onclick="onEditProduct('${p.product_id}')"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn btn-danger" title="Delete" onclick="onDeleteProduct('${p.product_id}')"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </td>
-        </tr>`).join('');
-
-    $paginationInfo.textContent = total ?
-        `Showing ${start}-${end} of ${total} products` :
-        'No products found';
-
-    // pagination
-    $pagination.innerHTML = '';
-    const prevDisabled = currentPage === 1 ? ' disabled' : '';
-    const nextDisabled = currentPage === totalPages ? ' disabled' : '';
-    $pagination.insertAdjacentHTML('beforeend', `
-        <li class="page-item${prevDisabled}">
-          <a class="page-link" href="#" aria-label="Previous" onclick="changePage(${currentPage - 1});return false;">&laquo;</a>
-        </li>`);
-    // Simple pagination window
-    const windowSize = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
-    let endPage = Math.min(totalPages, startPage + windowSize - 1);
-    if (endPage - startPage < windowSize - 1) startPage = Math.max(1, endPage - windowSize + 1);
-    for (let i = startPage; i <= endPage; i++) {
-        $pagination.insertAdjacentHTML('beforeend', `
-          <li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i});return false;">${i}</a></li>`);
-    }
-    $pagination.insertAdjacentHTML('beforeend', `
-        <li class="page-item${nextDisabled}">
-          <a class="page-link" href="#" aria-label="Next" onclick="changePage(${currentPage + 1});return false;">&raquo;</a>
-        </li>`);
-
-    // sortable headers indicators
-    updateSortIndicators();
-}
-
-function updateSortIndicators() {
-    document.querySelectorAll('#productsTable thead th.sortable').forEach(th => {
-        const icon = th.querySelector('i');
-        if (!icon) return;
-        icon.className = 'fa-solid fa-sort ms-1 text-muted';
-        if (th.dataset.col === sortColumn) {
-            icon.className = sortDirection === 'asc' ? 'fa-solid fa-arrow-up-wide-short ms-1 text-primary' : 'fa-solid fa-arrow-down-wide-short ms-1 text-primary';
-        }
-    });
-}
-
-function changePage(p) {
-    currentPage = Math.max(1, p);
-    renderTable();
-}
-
-// CRUD handlers via SweetAlert2
-function onAddNewProduct() {
-    Swal.fire({
-        title: 'Add New Product',
-        html: getProductFormHtml(),
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Save Product',
-        preConfirm: () => collectProductFormValues(),
-        didOpen: () => initFormDefaults()
-    }).then(result => {
-        if (result.isConfirmed && result.value) {
-            const form = result.value;
-            const id = generateNewId();
-            products.push({
-                product_id: id,
-                product_name: form.product_name,
-                category: form.category,
-                price: parseFloat(form.price),
-                stock: parseInt(form.stock, 10),
-                dateAdded: new Date().toISOString().slice(0, 10)
-            });
-            toast('Product created', 'success');
+    // === FETCH FROM SERVER ===
+    async function fetchProducts() {
+        try {
+            isLoading = true;
+            renderTable(); // show skeleton
+            const res = await fetch('/api/admin/products');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            products = await res.json();
+            // Normalize field names (API returns `name`, not `product_name`)
+            products = products.map(p => ({
+                ...p,
+                product_name: p.name,
+                dateAdded: p.date_added
+            }));
+            errorMessage = '';
+        } catch (err) {
+            errorMessage = `Failed to load products: ${err.message}`;
+            console.error(err);
+        } finally {
+            isLoading = false;
             renderTable();
             updateChart();
         }
-    });
-}
+    }
 
-function onEditProduct(id) {
-    const p = products.find(x => x.product_id === id);
-    if (!p) return;
-    Swal.fire({
-        title: `Edit ${p.product_name}`,
-        html: getProductFormHtml(p),
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Save Changes',
-        preConfirm: () => collectProductFormValues(),
-        didOpen: () => initFormDefaults(p)
-    }).then(result => {
-        if (result.isConfirmed && result.value) {
-            const form = result.value;
-            p.product_name = form.product_name;
-            p.category = form.category;
-            p.price = parseFloat(form.price);
-            p.stock = parseInt(form.stock, 10);
+    // === ADD PRODUCT ===
+    async function onAddNewProduct() {
+        const { value: form } = await Swal.fire({
+            title: 'Add New Product',
+            html: getProductFormHtml(),
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Save Product',
+            preConfirm: () => collectProductFormValues()
+        });
+
+        if (!form) return;
+
+        try {
+            const res = await fetch('/api/admin/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    product_id: generateNewId(),
+                    name: form.product_name,
+                    category: form.category,
+                    price: parseFloat(form.price),
+                    stock: parseInt(form.stock, 10)
+                })
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            const newProduct = await res.json();
+            products.push({
+                ...newProduct,
+                product_name: newProduct.name,
+                dateAdded: newProduct.date_added
+            });
+            toast('Product added', 'success');
+            renderTable();
+            updateChart();
+        } catch (err) {
+            toast(`Add failed: ${err.message}`, 'error');
+        }
+    }
+
+    // === EDIT PRODUCT ===
+    async function onEditProduct(id) {
+        const p = products.find(x => x.id === id);
+        if (!p) return;
+
+        const { value: form } = await Swal.fire({
+            title: `Edit ${p.product_name}`,
+            html: getProductFormHtml(p),
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Save Changes',
+            preConfirm: () => collectProductFormValues()
+        });
+
+        if (!form) return;
+
+        try {
+            const res = await fetch(`/api/admin/products/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: form.product_name,
+                    category: form.category,
+                    price: parseFloat(form.price),
+                    stock: parseInt(form.stock, 10)
+                })
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            const updated = await res.json();
+            Object.assign(p, {
+                product_name: updated.name,
+                category: updated.category,
+                price: updated.price,
+                stock: updated.stock
+            });
             toast('Product updated', 'success');
             renderTable();
             updateChart();
+        } catch (err) {
+            toast(`Update failed: ${err.message}`, 'error');
         }
-    });
-}
+    }
 
-function onDeleteProduct(id) {
-    const p = products.find(x => x.product_id === id);
-    if (!p) return;
-    Swal.fire({
-        title: 'Delete Product',
-        html: `<div class="text-start">Are you sure you want to delete <strong>${escapeHtml(p.product_name)}</strong>? This action cannot be undone.</div>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        confirmButtonColor: '#CD2026'
-    }).then(res => {
-        if (res.isConfirmed) {
-            products = products.filter(x => x.product_id !== id);
+    // === DELETE PRODUCT ===
+    async function onDeleteProduct(id) {
+        const p = products.find(x => x.id === id);
+        if (!p) return;
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Delete Product',
+            html: `<div class="text-start">Delete <strong>${escapeHtml(p.product_name)}</strong>?</div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            confirmButtonColor: '#CD2026'
+        });
+
+        if (!isConfirmed) return;
+
+        try {
+            const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error(await res.text());
+            products = products.filter(x => x.id !== id);
             toast('Product deleted', 'success');
             renderTable();
             updateChart();
+        } catch (err) {
+            toast(`Delete failed: ${err.message}`, 'error');
         }
-    });
-}
-
-// Form helpers
-function getProductFormHtml(prefill) {
-    const c = prefill?.category || '';
-    const price = prefill?.price ?? '';
-    const stock = prefill?.stock ?? '';
-    return `
-        <form id="productForm" class="text-start">
-          <div class="mb-3">
-            <label class="form-label">Product Name <span class="text-danger">*</span></label>
-            <input id="pf_name" class="form-control" type="text" placeholder="e.g., Orange Juice 1L" value="${prefill ? escapeHtml(prefill.product_name) : ''}" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Category <span class="text-danger">*</span></label>
-            <select id="pf_category" class="form-select" required>
-              <option value="">Select a category</option>
-              <option ${c==='Beverages'?'selected':''}>Beverages</option>
-              <option ${c==='Snacks'?'selected':''}>Snacks</option>
-              <option ${c==='Bakery'?'selected':''}>Bakery</option>
-              <option ${c==='Dairy'?'selected':''}>Dairy</option>
-              <option ${c==='Produce'?'selected':''}>Produce</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Unit Price (USD) <span class="text-danger">*</span></label>
-            <input id="pf_price" class="form-control" type="number" step="0.01" min="0" placeholder="e.g., 3.49" value="${price}">
-          </div>
-          <div class="mb-1">
-            <label class="form-label">In Stock <span class="text-danger">*</span></label>
-            <input id="pf_stock" class="form-control" type="number" step="1" min="0" placeholder="e.g., 100" value="${stock}">
-          </div>
-          <small class="text-muted">Fields marked * are required.</small>
-        </form>`;
-}
-
-function initFormDefaults(prefill) {
-    const nameEl = document.getElementById('pf_name');
-    if (nameEl) nameEl.focus();
-}
-
-function collectProductFormValues() {
-    const name = document.getElementById('pf_name').value.trim();
-    const category = document.getElementById('pf_category').value;
-    const price = document.getElementById('pf_price').value;
-    const stock = document.getElementById('pf_stock').value;
-    const errors = [];
-    if (!name) errors.push('Product Name is required');
-    if (!category) errors.push('Category is required');
-    if (price === '' || isNaN(price) || Number(price) < 0) errors.push('Valid Price is required');
-    if (stock === '' || isNaN(stock) || Number(stock) < 0) errors.push('Valid Stock is required');
-    if (errors.length) {
-        Swal.showValidationMessage(errors.join('<br>'));
-        return false;
     }
-    return {
-        product_name: name,
-        category,
-        price,
-        stock
-    };
-}
 
-function generateNewId() {
-    const nums = products.map(p => parseInt(p.product_id.replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
-    const next = (nums.length ? Math.max(...nums) : 1000) + 1;
-    return `P-${next}`;
-}
+    // === FORM HELPERS ===
+    function getProductFormHtml(prefill) {
+        const c = prefill?.category || '';
+        const price = prefill?.price ?? '';
+        const stock = prefill?.stock ?? '';
+        return `
+            <form id="productForm" class="text-start">
+              <div class="mb-3">
+                <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                <input id="pf_name" class="form-control" type="text" placeholder="e.g., Orange Juice 1L" value="${prefill ? escapeHtml(prefill.product_name) : ''}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Category <span class="text-danger">*</span></label>
+                <select id="pf_category" class="form-select" required>
+                  <option value="">Select a category</option>
+                  <option ${c==='Beverages'?'selected':''}>Beverages</option>
+                  <option ${c==='Snacks'?'selected':''}>Snacks</option>
+                  <option ${c==='Bakery'?'selected':''}>Bakery</option>
+                  <option ${c==='Dairy'?'selected':''}>Dairy</option>
+                  <option ${c==='Produce'?'selected':''}>Produce</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Unit Price (USD) <span class="text-danger">*</span></label>
+                <input id="pf_price" class="form-control" type="number" step="0.01" min="0" placeholder="e.g., 3.49" value="${price}">
+              </div>
+              <div class="mb-1">
+                <label class="form-label">In Stock <span class="text-danger">*</span></label>
+                <input id="pf_stock" class="form-control" type="number" step="1" min="0" placeholder="e.g., 100" value="${stock}">
+              </div>
+              <small class="text-muted">Fields marked * are required.</small>
+            </form>`;
+    }
 
-function toast(text, icon = 'info') {
-    const T = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 1800,
-        timerProgressBar: true
-    });
-    T.fire({
-        icon,
-        title: text
-    });
-}
+    function collectProductFormValues() {
+        const name = document.getElementById('pf_name').value.trim();
+        const category = document.getElementById('pf_category').value;
+        const price = document.getElementById('pf_price').value;
+        const stock = document.getElementById('pf_stock').value;
+        const errors = [];
+        if (!name) errors.push('Product Name is required');
+        if (!category) errors.push('Category is required');
+        if (price === '' || isNaN(price) || Number(price) < 0) errors.push('Valid Price is required');
+        if (stock === '' || isNaN(stock) || Number(stock) < 0) errors.push('Valid Stock is required');
+        if (errors.length) {
+            Swal.showValidationMessage(errors.join('<br>'));
+            return false;
+        }
+        return { product_name: name, category, price, stock };
+    }
 
-function showSystemFeedback(msg) {
-    $feedbackText.textContent = msg;
-    $systemFeedback.classList.remove('d-none');
-}
+    function generateNewId() {
+        const nums = products.map(p => parseInt(p.product_id.replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
+        const next = (nums.length ? Math.max(...nums) : 1000) + 1;
+        return `P-${next}`;
+    }
 
-function hideSystemFeedback() {
-    $systemFeedback.classList.add('d-none');
-}
+    // === TOAST & FEEDBACK ===
+    function toast(text, icon = 'info') {
+        const T = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false,
+            timer: 2000, timerProgressBar: true
+        });
+        T.fire({ icon, title: text });
+    }
 
-function escapeHtml(str) {
-    return String(str).replace(/[&<>"]/g, s => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;'
-    } [s]));
-}
+    function showSystemFeedback(msg) {
+        $feedbackText.textContent = msg;
+        $systemFeedback.classList.remove('d-none');
+    }
 
-// Chart.js: Products by category
-let categoryChart;
+    function hideSystemFeedback() {
+        $systemFeedback.classList.add('d-none');
+    }
 
-function updateChart() {
-    const counts = products.reduce((acc, p) => {
-        acc[p.category] = (acc[p.category] || 0) + 1;
-        return acc;
-    }, {});
-    const labels = Object.keys(counts).sort();
-    const data = labels.map(l => counts[l]);
-    const ctx = document.getElementById('categoryChart');
-    const palette = ['#f08e1b', '#9a296a', '#0099D2', '#00774E', '#CD2026', '#6C757D'];
-    if (!categoryChart) {
-        categoryChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data,
-                    backgroundColor: palette.slice(0, labels.length),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        enabled: true
-                    }
-                },
-                animation: {
-                    animateRotate: true,
-                    animateScale: true
-                }
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[s]));
+    }
+
+    // === RENDERING ===
+    function applyFilters(data) {
+        const q = ($searchInput.value || '').trim().toLowerCase();
+        const category = $categoryFilter.value;
+        return data.filter(p => {
+            const matchQ = !q || p.product_id.toLowerCase().includes(q) || p.product_name.toLowerCase().includes(q);
+            const matchCat = !category || p.category === category;
+            return matchQ && matchCat;
+        });
+    }
+
+    function compare(a, b, col) {
+        const va = a[col], vb = b[col];
+        if (col === 'price' || col === 'stock') return va - vb;
+        if (col === 'dateAdded') return new Date(a.dateAdded) - new Date(b.dateAdded);
+        return String(va).localeCompare(String(vb), 'en', { sensitivity: 'base' });
+    }
+
+    function applySort(data) {
+        return data.slice().sort((a, b) => {
+            const res = compare(a, b, sortColumn);
+            return sortDirection === 'asc' ? res : -res;
+        });
+    }
+
+    function paginate(data) {
+        const total = data.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        return {
+            pageItems: data.slice(start, end),
+            total, totalPages,
+            start: start + 1,
+            end: Math.min(end, total)
+        };
+    }
+
+    function renderTable() {
+        if (isLoading) {
+            $tableBody.innerHTML = Array(6).fill().map(() => `
+                <tr><td colspan="7"><div class="skeleton" style="height:18px;"></div></td></tr>
+            `).join('');
+            $paginationInfo.textContent = 'Loading…';
+            $pagination.innerHTML = '';
+            return;
+        }
+
+        if (errorMessage) {
+            showSystemFeedback(errorMessage);
+        } else {
+            hideSystemFeedback();
+        }
+
+        const filtered = applyFilters(products);
+        const sorted = applySort(filtered);
+        const { pageItems, total, totalPages, start, end } = paginate(sorted);
+
+        $tableBody.innerHTML = pageItems.map(p => `
+            <tr>
+              <td><span class="text-muted">${p.product_id}</span></td>
+              <td><span class="fw-semibold">${escapeHtml(p.product_name)}</span></td>
+              <td><span class="badge-soft primary">${p.category}</span></td>
+              <td class="text-end">${currency.format(p.price)}</td>
+              <td class="text-end">${p.stock.toLocaleString()}</td>
+              <td>${dateFmt.format(new Date(p.dateAdded))}</td>
+              <td class="text-center">
+                <div class="btn-group btn-group-sm" role="group">
+                  <button class="btn btn-light" title="Edit" onclick="onEditProduct(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn btn-danger" title="Delete" onclick="onDeleteProduct(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>`).join('');
+
+        $paginationInfo.textContent = total ? `Showing ${start}-${end} of ${total}` : 'No products';
+
+        // Pagination
+        $pagination.innerHTML = '';
+        const prevDisabled = currentPage === 1 ? ' disabled' : '';
+        const nextDisabled = currentPage === totalPages ? ' disabled' : '';
+        $pagination.insertAdjacentHTML('beforeend', `
+            <li class="page-item${prevDisabled}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1});return false;">Previous</a></li>`);
+        const window = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(window / 2));
+        let endPage = Math.min(totalPages, startPage + window - 1);
+        if (endPage - startPage < window - 1) startPage = Math.max(1, endPage - window + 1);
+        for (let i = startPage; i <= endPage; i++) {
+            $pagination.insertAdjacentHTML('beforeend', `
+                <li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i});return false;">${i}</a></li>`);
+        }
+        $pagination.insertAdjacentHTML('beforeend', `
+            <li class="page-item${nextDisabled}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1});return false;">Next</a></li>`);
+
+        updateSortIndicators();
+    }
+
+    function updateSortIndicators() {
+        document.querySelectorAll('#productsTable thead th.sortable').forEach(th => {
+            const icon = th.querySelector('i');
+            if (!icon) return;
+            icon.className = 'fa-solid fa-sort ms-1 text-muted';
+            if (th.dataset.col === sortColumn) {
+                icon.className = sortDirection === 'asc'
+                    ? 'fa-solid fa-arrow-up-wide-short ms-1 text-primary'
+                    : 'fa-solid fa-arrow-down-wide-short ms-1 text-primary';
             }
         });
-    } else {
-        categoryChart.data.labels = labels;
-        categoryChart.data.datasets[0].data = data;
-        categoryChart.data.datasets[0].backgroundColor = palette.slice(0, labels.length);
-        categoryChart.update();
     }
-}
 
-// Events
-document.getElementById('btnAddProduct').addEventListener('click', onAddNewProduct);
-document.getElementById('btnResetFilters').addEventListener('click', () => {
-    $searchInput.value = '';
-    $categoryFilter.value = '';
-    $sortSelect.value = 'dateAdded|desc';
-    sortColumn = 'dateAdded';
-    sortDirection = 'desc';
-    currentPage = 1;
-    renderTable();
-});
+    function changePage(p) {
+        currentPage = Math.max(1, p);
+        renderTable();
+    }
 
-$searchInput.addEventListener('input', () => {
-    currentPage = 1;
-    renderTable();
-});
-$globalSearch.addEventListener('input', () => {
-    $searchInput.value = $globalSearch.value;
-    currentPage = 1;
-    renderTable();
-});
-$categoryFilter.addEventListener('change', () => {
-    currentPage = 1;
-    renderTable();
-});
-$sortSelect.addEventListener('change', (e) => {
-    const [col, dir] = e.target.value.split('|');
-    sortColumn = col;
-    sortDirection = dir;
-    currentPage = 1;
-    renderTable();
-});
-
-document.querySelectorAll('#productsTable thead th.sortable').forEach(th => {
-    th.style.cursor = 'pointer';
-    th.addEventListener('click', () => {
-        const col = th.dataset.col;
-        if (sortColumn === col) {
-            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    // === CHART ===
+    let categoryChart;
+    function updateChart() {
+        const counts = products.reduce((acc, p) => {
+            acc[p.category] = (acc[p.category] || 0) + 1;
+            return acc;
+        }, {});
+        const labels = Object.keys(counts).sort();
+        const data = labels.map(l => counts[l]);
+        const ctx = document.getElementById('categoryChart');
+        const palette = ['#f08e1b', '#9a296a', '#0099D2', '#00774E', '#CD2026', '#6C757D'];
+        if (!categoryChart) {
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: palette.slice(0, labels.length), borderWidth: 1 }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
         } else {
-            sortColumn = col;
-            sortDirection = 'asc';
+            categoryChart.data.labels = labels;
+            categoryChart.data.datasets[0].data = data;
+            categoryChart.data.datasets[0].backgroundColor = palette.slice(0, labels.length);
+            categoryChart.update();
         }
+    }
+
+    // === EVENT LISTENERS ===
+    document.getElementById('btnAddProduct').addEventListener('click', onAddNewProduct);
+    document.getElementById('btnResetFilters').addEventListener('click', () => {
+        $searchInput.value = $categoryFilter.value = '';
+        $sortSelect.value = 'dateAdded|desc';
+        sortColumn = 'dateAdded'; sortDirection = 'desc';
+        currentPage = 1;
         renderTable();
     });
-});
 
-// Expose some handlers globally (used in inline onclick)
-window.onEditProduct = onEditProduct;
-window.onDeleteProduct = onDeleteProduct;
-window.changePage = changePage;
+    $searchInput.addEventListener('input', () => { currentPage = 1; renderTable(); });
+    $globalSearch.addEventListener('input', () => {
+        $searchInput.value = $globalSearch.value;
+        currentPage = 1; renderTable();
+    });
+    $categoryFilter.addEventListener('change', () => { currentPage = 1; renderTable(); });
+    $sortSelect.addEventListener('change', e => {
+        const [col, dir] = e.target.value.split('|');
+        sortColumn = col; sortDirection = dir;
+        currentPage = 1; renderTable();
+    });
 
-// Init
-setYear();
-loadProducts();
-  </script>
+    document.querySelectorAll('#productsTable thead th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            sortDirection = sortColumn === col && sortDirection === 'asc' ? 'desc' : 'asc';
+            sortColumn = col;
+            renderTable();
+        });
+    });
+
+    // Expose for inline onclick
+    window.onEditProduct = onEditProduct;
+    window.onDeleteProduct = onDeleteProduct;
+    window.changePage = changePage;
+
+    // === INIT ===
+    setYear();
+    fetchProducts(); // <-- This loads from MySQL
+</script>
  </body>
 </html>
