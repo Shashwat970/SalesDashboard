@@ -4,8 +4,8 @@ from database import get_db, execute_db, query_db
 from datetime import datetime
 
 def get_all_products():
-    """Fetches all products from the database."""
-    return query_db("SELECT * FROM products ORDER BY name ASC")
+    """Return ALL products from DB with correct field names."""
+    return query_db("""SELECT id, product_id, name AS product_name, category, price, stock, date_added AS dateAdded FROM products ORDER BY date_added DESC""")
 
 def get_product_by_id(product_id):
     """Fetches a single product by its database ID."""
