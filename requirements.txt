@@ -1,0 +1,8 @@
+Flask
+Werkzeug
+pandas
+numpy
+scikit-learn
+mysql-connector-python
+openpyxl
+python-dateutil
