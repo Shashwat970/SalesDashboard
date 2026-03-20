@@ -3,6 +3,6 @@ Werkzeug
 pandas
 numpy
 scikit-learn
-mysql-connector-python
+gunicorn
 openpyxl
 python-dateutil
