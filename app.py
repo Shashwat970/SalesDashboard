@@ -42,7 +42,7 @@ def role_required(role):
             if 'user_id' not in session:
                 flash('Please log in to access this page.', 'warning')
                 return redirect(url_for('login', next=request.url))
-            user = query_db("SELECT * FROM users WHERE id = %s", (session['user_id'],), one=True)
+            user = query_db("SELECT * FROM users WHERE id = ?", (session['user_id'],), one=True)
             if not user or user['role'] != role:
                 flash(f'You do not have permission to access this page. Required role: {role}.', 'danger')
                 return redirect(url_for('login')) # Redirect to login or unauthorized page
@@ -69,7 +69,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = query_db("SELECT * FROM users WHERE username = %s", (username,), one=True)
+        user = query_db("SELECT * FROM users WHERE username = ?", (username,), one=True)
 
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
@@ -544,4 +544,4 @@ def api_get_forecast_data(product_db_id):
 
 if __name__ == '__main__':
     # Use app.run(debug=True) for development, turn off for production
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
