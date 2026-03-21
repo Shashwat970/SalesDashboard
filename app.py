@@ -30,7 +30,7 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please login first', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('login', next= request.url))
         return f(*args, **kwargs)
     return decorated
 
@@ -40,7 +40,7 @@ def role_required(role):
         @wraps(f)
         def decorated(*args, **kwargs):
             if 'user_id' not in session:
-                return redirect(url_for('login'))
+                return redirect(url_for('login', next= request.url))
 
             user = query_db("SELECT * FROM users WHERE id = ?", (session['user_id'],), one=True)
 
