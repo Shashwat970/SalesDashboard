@@ -66,25 +66,31 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-
+    # Only clear session after successful login (not on GET)
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
+        username = request.form.get('username')
+        password = request.form.get('password')
         user = query_db("SELECT * FROM users WHERE username = ?", (username,), one=True)
 
         if user and check_password_hash(user['password'], password):
+            session.clear()  # Reset session only after successful auth
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
-
+            flash('Welcome back!', 'success')
+            next_page = request.args.get('next')
             if user['role'] == 'Admin':
-                return redirect(url_for('admin_dashboard'))
-            return redirect(url_for('forecast_dashboard'))
+                return redirect(next_page or url_for('admin_dashboard'))
+            else:
+                return redirect(next_page or url_for('forecast_dashboard'))
+        else:
+            # Generic error message for security
+            flash('Invalid username or password.', 'danger')
+            return render_template('login_page.html')
 
-        flash('Invalid credentials', 'danger')
-
+    # No session clearing on GET
     return render_template('login_page.html')
+
 
 
 @app.route('/logout')
