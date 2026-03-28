@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}User Management | Admin{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/user_management_page.css') }}" rel="stylesheet"/>
+{% endblock %}
+
+{% block nav_brand %}Admin{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar-section-label">Overview</div>
+<a href="{{ url_for('admin_dashboard') }}" class="sidebar-link">
+  <i class="fa-solid fa-gauge"></i> Dashboard
+</a>
+<div class="sidebar-section-label">Data</div>
+<a href="{{ url_for('products_page') }}" class="sidebar-link">
+  <i class="fa-solid fa-boxes-stacked"></i> Products
+</a>
+<a href="{{ url_for('upload_page') }}" class="sidebar-link">
+  <i class="fa-solid fa-file-arrow-up"></i> Upload Data
+</a>
+<div class="sidebar-section-label">System</div>
+<a href="{{ url_for('model_management') }}" class="sidebar-link">
+  <i class="fa-solid fa-robot"></i> Model Management
+</a>
+<a href="{{ url_for('user_management') }}" class="sidebar-link active">
+  <i class="fa-solid fa-users-gear"></i> User Management
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">User Management</h1>
+    <p class="page-subtitle">Manage system users and access roles</p>
+  </div>
+  <button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;"
+          data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="fa-solid fa-user-plus me-1"></i> Add User
+  </button>
+</div>
+
+<!-- Alert -->
+<div id="pageAlert" class="d-none mb-3"></div>
+
+<!-- Toolbar -->
+<div class="user-toolbar">
+  <div class="search-wrap">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <input type="search" class="form-control" id="userSearch" placeholder="Search users…"/>
+    </div>
+  </div>
+  <div class="filter-wrap">
+    <select class="form-select form-select-sm" id="roleFilter">
+      <option value="">All Roles</option>
+      <option value="Admin">Admin</option>
+      <option value="User">User</option>
+    </select>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline-subtle btn-sm" id="refreshUsers">
+      <i class="fa-solid fa-rotate-right"></i>
+    </button>
+    <button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;"
+            data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="fa-solid fa-user-plus me-1"></i> Add User
+    </button>
+  </div>
+</div>
+
+<!-- User Table -->
+<div class="user-table-wrap">
+  <table class="data-table" id="usersTable">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th data-sort="username">Username</th>
+        <th data-sort="role">Role</th>
+        <th data-sort="created_at">Joined</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="usersTbody">
+      <tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+        <div class="spinner-border spinner-border-sm me-2"></div> Loading…
+      </td></tr>
+    </tbody>
+  </table>
+  <div style="padding:.75rem 1.25rem;border-top:1px solid var(--border);font-size:.8125rem;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;">
+    <span id="userCount">—</span>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-subtle btn-sm" id="userPrev" disabled>
+        <i class="fa-solid fa-chevron-left fa-xs"></i>
+      </button>
+      <button class="btn btn-outline-subtle btn-sm" id="userNext" disabled>
+        <i class="fa-solid fa-chevron-right fa-xs"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:460px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-user-plus me-2"></i>Add New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Username / Email <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newUsername" placeholder="user@acme.com"
+                   autocomplete="off"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Password <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="newPassword" placeholder="Min 8 characters"
+                     autocomplete="new-password"/>
+              <button type="button" class="btn btn-outline-subtle" id="toggleNewPwd" style="border-left:none;">
+                <i class="fa-solid fa-eye-slash fa-xs" id="newPwdIcon"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Role <span class="text-danger">*</span></label>
+            <select class="form-select" id="newRole">
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div id="addUserError" class="alert alert-danger mt-3 d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-subtle" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;"
+                id="saveUserBtn">
+          <i class="fa-solid fa-check me-1"></i> Create User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-trash me-2" style="color:var(--danger)"></i>Delete User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-confirm-user">
+          <div class="icon"><i class="fa-solid fa-user-xmark"></i></div>
+          <div>
+            <div style="font-weight:600;color:var(--text);" id="deleteUserName">—</div>
+            <div style="font-size:.8125rem;color:var(--text-muted);">This action cannot be undone.</div>
+          </div>
+        </div>
+        <p style="font-size:.875rem;color:var(--text-muted);margin:0;">
+          Are you sure you want to permanently delete this user and revoke their access?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-subtle" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;border:none;"
+                id="confirmDeleteBtn">
+          <i class="fa-solid fa-trash me-1"></i> Delete User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allUsers = [];
+let pendingDeleteId = null;
+let state = { page: 1, pageSize: 10, filter: '', role: '', sortKey: 'created_at', sortDir: 'desc' };
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('pageAlert');
+  el.className = `alert alert-${type} alert-dismissible fade show`;
+  el.innerHTML = `${msg} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  el.classList.remove('d-none');
+  setTimeout(() => el.classList.add('d-none'), 5000);
+}
+
+function initials(name) {
+  return name.split(/[@.\s]/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('');
+}
+
+function avatarColor(name) {
+  const colors = ['#1a1a2e','#0f3460','#e94560','#10b981','#f59e0b','#3b82f6','#7c3aed'];
+  let hash = 0;
+  for (const c of name) hash = ((hash << 5) - hash) + c.charCodeAt(0);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+async function loadUsers() {
+  try {
+    const res = await fetch('{{ url_for("api_get_users") }}');
+    if (!res.ok) throw new Error();
+    allUsers = await res.json();
+  } catch {
+    // Demo data
+    allUsers = [
+      {id:1, username:'admin@acme.com', role:'Admin', created_at:'2024-01-01 08:00'},
+      {id:2, username:'user@acme.com',  role:'User',  created_at:'2024-01-05 09:30'},
+      {id:3, username:'jane.smith@acme.com', role:'User', created_at:'2024-02-12 10:15'},
+      {id:4, username:'raj.kumar@acme.com',  role:'User', created_at:'2024-03-01 11:00'},
+      {id:5, username:'ops.manager@acme.com',role:'Admin',created_at:'2024-04-15 14:00'},
+    ];
+  }
+  renderTable();
+}
+
+function renderTable() {
+  let rows = allUsers.filter(u => {
+    const q = state.filter.toLowerCase();
+    const matchQ = !q || u.username.toLowerCase().includes(q);
+    const matchR = !state.role || u.role === state.role;
+    return matchQ && matchR;
+  });
+
+  rows.sort((a, b) => {
+    let av = a[state.sortKey], bv = b[state.sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+    return state.sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+
+  const total = rows.length;
+  const start = (state.page - 1) * state.pageSize;
+  const page  = rows.slice(start, start + state.pageSize);
+  const tbody = document.getElementById('usersTbody');
+
+  const currentUserId = {{ session.get('user_id', 0) }};
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+      <i class="fa-solid fa-users fa-2x d-block mb-2 opacity-25"></i>No users found</td></tr>`;
+  } else {
+    tbody.innerHTML = page.map(u => {
+      const isSelf = u.id === currentUserId;
+      const bg = avatarColor(u.username);
+      return `
+      <tr>
+        <td>
+          <div class="table-avatar" style="background:${bg};">${initials(u.username)}</div>
+        </td>
+        <td>
+          <div style="font-weight:500;color:var(--text);">${u.username}</div>
+          ${isSelf ? '<small style="color:var(--text-muted);font-size:.75rem;">(you)</small>' : ''}
+        </td>
+        <td>
+          <span class="role-badge ${u.role === 'Admin' ? 'role-admin' : 'role-user'}">
+            <i class="fa-solid fa-${u.role === 'Admin' ? 'shield-halved' : 'user'} fa-xs me-1"></i>
+            ${u.role}
+          </span>
+        </td>
+        <td style="color:var(--text-muted);font-size:.8125rem;">${u.created_at?.split(' ')[0] ?? '—'}</td>
+        <td class="text-end">
+          ${!isSelf ? `
+          <button class="btn-table-action delete" data-id="${u.id}" data-name="${u.username}" title="Delete user">
+            <i class="fa-solid fa-trash fa-xs"></i>
+          </button>` : '<span style="font-size:.75rem;color:var(--text-light);padding:.35rem .5rem;">—</span>'}
+        </td>
+      </tr>
+    `}).join('');
+  }
+
+  document.getElementById('userCount').textContent =
+    total ? `Showing ${Math.min(start+1,total)}–${Math.min(start+state.pageSize,total)} of ${total} users` : '0 users';
+  document.getElementById('userPrev').disabled = state.page <= 1;
+  document.getElementById('userNext').disabled = state.page >= Math.ceil(total / state.pageSize);
+
+  // Wire delete buttons
+  tbody.querySelectorAll('.delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = Number(btn.dataset.id);
+      document.getElementById('deleteUserName').textContent = btn.dataset.name;
+      new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+    });
+  });
+}
+
+// Save new user
+document.getElementById('saveUserBtn').addEventListener('click', async () => {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role     = document.getElementById('newRole').value;
+  const errEl    = document.getElementById('addUserError');
+  errEl.classList.add('d-none');
+
+  if (!username || !password) {
+    errEl.textContent = 'Username and password are required.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+  if (allUsers.find(u => u.username === username)) {
+    errEl.textContent = 'Username already exists.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  try {
+    const res = await fetch('{{ url_for("api_add_user") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, role })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+    const data = await res.json();
+    allUsers.unshift({ id: data.id, username, role, created_at: new Date().toISOString().slice(0,16).replace('T',' ') });
+  } catch (e) {
+    // Demo: add locally
+    allUsers.unshift({
+      id: Date.now(), username, role,
+      created_at: new Date().toISOString().slice(0,16).replace('T',' ')
+    });
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newRole').value = 'User';
+  renderTable();
+  showAlert(`User <strong>${username}</strong> created successfully.`);
+});
+
+// Confirm delete
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const user = allUsers.find(u => u.id === pendingDeleteId);
+  try {
+    const res = await fetch(`{{ url_for("api_delete_user", user_id=0) }}`.replace('/0', `/${pendingDeleteId}`), {
+      method: 'DELETE'
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+  } catch {}
+  allUsers = allUsers.filter(u => u.id !== pendingDeleteId);
+  pendingDeleteId = null;
+  bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+  renderTable();
+  showAlert(`User <strong>${user?.username}</strong> deleted.`);
+});
+
+// Toggle password visibility in modal
+document.getElementById('toggleNewPwd').addEventListener('click', function() {
+  const inp  = document.getElementById('newPassword');
+  const icon = document.getElementById('newPwdIcon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+  else                         { inp.type = 'password'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+});
+
+// Sorting
+document.querySelectorAll('#usersTable th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    state.sortDir = state.sortKey === k && state.sortDir === 'asc' ? 'desc' : 'asc';
+    state.sortKey = k; state.page = 1; renderTable();
+  });
+});
+
+document.getElementById('userSearch').addEventListener('input', e => { state.filter = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('roleFilter').addEventListener('change', e => { state.role = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('userPrev').addEventListener('click', () => { state.page--; renderTable(); });
+document.getElementById('userNext').addEventListener('click', () => { state.page++; renderTable(); });
+document.getElementById('refreshUsers').addEventListener('click', loadUsers);
+
+document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}

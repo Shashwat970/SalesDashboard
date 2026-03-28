@@ -1,0 +1,160 @@
+/* ============================================================
+   Admin Dashboard — Page Specific
+   ============================================================ */
+
+/* KPI row */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  text-decoration: none;
+  color: inherit;
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+}
+
+.kpi-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .875rem;
+  flex-shrink: 0;
+}
+
+.kpi-body { flex: 1; min-width: 0; }
+
+.kpi-label {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-value {
+  font-size: 1.625rem;
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -.03em;
+}
+
+.kpi-sub {
+  font-size: .75rem;
+  color: var(--text-light);
+  margin-top: .15rem;
+}
+
+/* Chart + table grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1199.98px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* Active model card */
+.active-model-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  color: #fff;
+}
+
+.active-model-card .label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .7;
+  margin-bottom: .375rem;
+}
+
+.active-model-card .model-name {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: .875rem;
+}
+
+.active-model-card .metric-pill {
+  display: inline-block;
+  background: rgba(255,255,255,.15);
+  border-radius: 100px;
+  padding: .2rem .7rem;
+  font-size: .8125rem;
+  margin-right: .4rem;
+  margin-bottom: .4rem;
+}
+
+/* Forecast chart canvas */
+#accuracyChart {
+  height: 220px !important;
+}
+
+/* Recent uploads table */
+.uploads-table-wrap {
+  overflow-x: auto;
+  margin: 0 -1.25rem;
+  padding: 0 1.25rem;
+}
+
+/* Info row below KPIs */
+.info-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.info-strip-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.info-strip-item i {
+  color: var(--text-muted);
+  font-size: .875rem;
+}
+
+.info-strip-item span {
+  font-size: .875rem;
+  color: var(--text-muted);
+}
+
+.info-strip-item strong {
+  color: var(--text);
+  font-weight: 500;
+}

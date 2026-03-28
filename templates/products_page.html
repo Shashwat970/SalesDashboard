@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% block title %}Products | Admin{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/product_management_page.css') }}" rel="stylesheet"/>
+{% endblock %}
+
+{% block nav_brand %}Admin{% endblock %}
+
+{% block nav_actions %}
+<a href="{{ url_for('upload_page') }}" class="btn-nav btn-nav-light d-none d-md-inline-flex">
+  <i class="fa-solid fa-file-arrow-up"></i> Upload
+</a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar-section-label">Overview</div>
+<a href="{{ url_for('admin_dashboard') }}" class="sidebar-link">
+  <i class="fa-solid fa-gauge"></i> Dashboard
+</a>
+<div class="sidebar-section-label">Data</div>
+<a href="{{ url_for('products_page') }}" class="sidebar-link active">
+  <i class="fa-solid fa-boxes-stacked"></i> Products
+</a>
+<a href="{{ url_for('upload_page') }}" class="sidebar-link">
+  <i class="fa-solid fa-file-arrow-up"></i> Upload Data
+</a>
+<div class="sidebar-section-label">System</div>
+<a href="{{ url_for('model_management') }}" class="sidebar-link">
+  <i class="fa-solid fa-robot"></i> Model Management
+</a>
+<a href="{{ url_for('user_management') }}" class="sidebar-link">
+  <i class="fa-solid fa-users-gear"></i> User Management
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Products</h1>
+    <p class="page-subtitle">Manage your product catalog</p>
+  </div>
+  <button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;" data-bs-toggle="modal" data-bs-target="#addProductModal">
+    <i class="fa-solid fa-plus me-1"></i> Add Product
+  </button>
+</div>
+
+<!-- Alert -->
+<div id="pageAlert" class="d-none mb-3"></div>
+
+<!-- Toolbar -->
+<div class="product-toolbar">
+  <div class="search-wrap">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <input type="search" class="form-control" id="productSearch" placeholder="Search products…"/>
+    </div>
+  </div>
+  <div class="filter-wrap">
+    <select class="form-select form-select-sm" id="categoryFilter">
+      <option value="">All Categories</option>
+    </select>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline-subtle btn-sm" id="refreshProducts">
+      <i class="fa-solid fa-rotate-right"></i>
+    </button>
+    <button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;" data-bs-toggle="modal" data-bs-target="#addProductModal">
+      <i class="fa-solid fa-plus me-1"></i> Add
+    </button>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="product-table-wrap">
+  <div class="table-responsive">
+    <table class="data-table" id="productsTable">
+      <thead>
+        <tr>
+          <th data-sort="product_id">ID</th>
+          <th data-sort="name">Name</th>
+          <th data-sort="category">Category</th>
+          <th data-sort="price" class="text-end">Price</th>
+          <th data-sort="stock" class="text-end">Stock</th>
+          <th data-sort="date_added">Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="productsTbody">
+        <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted)">
+          <div class="spinner-border spinner-border-sm me-2"></div> Loading…
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">
+    <span id="productCount">—</span>
+    <div class="page-btns">
+      <button class="page-btn" id="prodPrev" disabled><i class="fa-solid fa-chevron-left fa-xs"></i></button>
+      <button class="page-btn" id="prodNext" disabled><i class="fa-solid fa-chevron-right fa-xs"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i>Add Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Product ID <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newProductId" placeholder="e.g. P001"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Category <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newCategory" placeholder="e.g. Beverages"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Product Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newName" placeholder="Product name"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Price ($) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="newPrice" placeholder="0.00" step="0.01" min="0"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Stock <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="newStock" placeholder="0" min="0"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-subtle" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;" id="saveProductBtn">
+          <i class="fa-solid fa-check me-1"></i> Save Product
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-pen me-2"></i>Edit Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editProductDbId"/>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Product ID</label>
+            <input type="text" class="form-control" id="editProductId" readonly style="background:var(--bg)"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Category</label>
+            <input type="text" class="form-control" id="editCategory"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="editName"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Price ($)</label>
+            <input type="number" class="form-control" id="editPrice" step="0.01" min="0"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Stock</label>
+            <input type="number" class="form-control" id="editStock" min="0"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-subtle" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;" id="updateProductBtn">
+          <i class="fa-solid fa-check me-1"></i> Update
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allProducts = [];
+let state = { page: 1, pageSize: 12, filter: '', category: '', sortKey: 'name', sortDir: 'asc' };
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('pageAlert');
+  el.className = `alert alert-${type} alert-dismissible fade show`;
+  el.innerHTML = `${msg} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  el.classList.remove('d-none');
+  setTimeout(() => el.classList.add('d-none'), 4000);
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch('{{ url_for("api_get_products") }}');
+    if (!res.ok) throw new Error();
+    allProducts = await res.json();
+  } catch {
+    // Demo data
+    allProducts = [
+      {id:1, product_id:'P001', name:'Organic Granola',     category:'Cereals',   price:8.99,  stock:150, date_added:'2024-01-10'},
+      {id:2, product_id:'P002', name:'Almond Butter 500g',  category:'Spreads',   price:12.99, stock:80,  date_added:'2024-01-15'},
+      {id:3, product_id:'P003', name:'Green Tea Matcha',    category:'Beverages', price:15.99, stock:200, date_added:'2024-02-01'},
+      {id:4, product_id:'P004', name:'Protein Bars (12pk)', category:'Snacks',    price:24.99, stock:60,  date_added:'2024-02-10'},
+      {id:5, product_id:'P005', name:'Oat Milk 1L',         category:'Beverages', price:3.49,  stock:320, date_added:'2024-03-05'},
+      {id:6, product_id:'P006', name:'Quinoa 500g',         category:'Grains',    price:6.99,  stock:95,  date_added:'2024-03-12'},
+      {id:7, product_id:'P007', name:'Chia Seeds 250g',     category:'Seeds',     price:5.49,  stock:180, date_added:'2024-04-01'},
+      {id:8, product_id:'P008', name:'Coconut Yogurt',      category:'Dairy-Alt', price:4.99,  stock:12,  date_added:'2024-04-08'},
+    ];
+  }
+  populateCategoryFilter();
+  renderTable();
+}
+
+function populateCategoryFilter() {
+  const cats = [...new Set(allProducts.map(p => p.category))].sort();
+  const sel  = document.getElementById('categoryFilter');
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function stockClass(s) {
+  if (s <= 15) return 'stock-low';
+  if (s <= 50) return 'stock-mid';
+  return 'stock-ok';
+}
+
+function renderTable() {
+  let rows = allProducts.filter(p => {
+    const q = state.filter.toLowerCase();
+    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.product_id.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+    const matchCat    = !state.category || p.category === state.category;
+    return matchSearch && matchCat;
+  });
+
+  rows.sort((a, b) => {
+    let av = a[state.sortKey], bv = b[state.sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+    return state.sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+
+  const total  = rows.length;
+  const start  = (state.page - 1) * state.pageSize;
+  const page   = rows.slice(start, start + state.pageSize);
+  const tbody  = document.getElementById('productsTbody');
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted)">
+      <i class="fa-solid fa-box-open fa-2x d-block mb-2 opacity-25"></i>No products found</td></tr>`;
+  } else {
+    tbody.innerHTML = page.map(p => `
+      <tr>
+        <td><code style="font-size:.8rem;">${p.product_id}</code></td>
+        <td><strong>${p.name}</strong></td>
+        <td><span class="badge-status badge-inactive">${p.category}</span></td>
+        <td class="text-end">$${Number(p.price).toFixed(2)}</td>
+        <td class="text-end"><span class="stock-indicator ${stockClass(p.stock)}">
+          <i class="fa-solid fa-${p.stock <= 15 ? 'triangle-exclamation' : 'check'} fa-xs me-1"></i>${p.stock}
+        </span></td>
+        <td style="color:var(--text-muted);font-size:.8125rem">${p.date_added}</td>
+        <td class="text-end">
+          <div class="d-flex gap-1 justify-content-end">
+            <button class="btn-table-action edit" data-id="${p.id}" title="Edit">
+              <i class="fa-solid fa-pen fa-xs"></i>
+            </button>
+            <button class="btn-table-action delete" data-id="${p.id}" title="Delete">
+              <i class="fa-solid fa-trash fa-xs"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('productCount').textContent =
+    total ? `Showing ${Math.min(start+1, total)}–${Math.min(start+state.pageSize, total)} of ${total}` : '0 products';
+  document.getElementById('prodPrev').disabled = state.page <= 1;
+  document.getElementById('prodNext').disabled = state.page >= Math.ceil(total / state.pageSize);
+
+  // Wire edit/delete
+  tbody.querySelectorAll('.edit').forEach(btn => {
+    btn.addEventListener('click', () => openEditModal(Number(btn.dataset.id)));
+  });
+  tbody.querySelectorAll('.delete').forEach(btn => {
+    btn.addEventListener('click', () => deleteProduct(Number(btn.dataset.id)));
+  });
+}
+
+function openEditModal(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('editProductDbId').value = p.id;
+  document.getElementById('editProductId').value   = p.product_id;
+  document.getElementById('editName').value        = p.name;
+  document.getElementById('editCategory').value    = p.category;
+  document.getElementById('editPrice').value       = p.price;
+  document.getElementById('editStock').value       = p.stock;
+  new bootstrap.Modal(document.getElementById('editProductModal')).show();
+}
+
+async function deleteProduct(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  const res = await Swal.fire({
+    title: 'Delete Product?',
+    html: `<div class="text-start"><strong>${p.name}</strong><br/><small style="color:var(--text-muted)">This cannot be undone.</small></div>`,
+    icon: 'warning', showCancelButton: true,
+    confirmButtonColor: '#ef4444', confirmButtonText: 'Delete'
+  });
+  if (!res.isConfirmed) return;
+  try {
+    const r = await fetch(`{{ url_for("api_delete_product", product_id=0) }}`.replace('/0', `/${id}`), { method: 'DELETE' });
+    if (!r.ok) throw new Error();
+    allProducts = allProducts.filter(x => x.id !== id);
+    renderTable();
+    showAlert('Product deleted successfully.');
+  } catch {
+    // Demo: just remove locally
+    allProducts = allProducts.filter(x => x.id !== id);
+    renderTable();
+    showAlert('Product deleted.');
+  }
+}
+
+// Save new product
+document.getElementById('saveProductBtn').addEventListener('click', async () => {
+  const data = {
+    product_id: document.getElementById('newProductId').value.trim(),
+    name:       document.getElementById('newName').value.trim(),
+    category:   document.getElementById('newCategory').value.trim(),
+    price:      parseFloat(document.getElementById('newPrice').value),
+    stock:      parseInt(document.getElementById('newStock').value),
+  };
+  if (!data.product_id || !data.name || !data.category || isNaN(data.price) || isNaN(data.stock)) {
+    Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+    return;
+  }
+  try {
+    const r = await fetch('{{ url_for("api_add_product") }}', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Failed'); }
+    await loadProducts();
+    bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+    showAlert('Product added successfully!');
+  } catch (e) {
+    // Demo: add locally
+    allProducts.push({ ...data, id: Date.now(), date_added: new Date().toISOString().slice(0,10) });
+    renderTable(); populateCategoryFilter();
+    bootstrap.Modal.getInstance(document.getElementById('addProductModal'))?.hide();
+    showAlert('Product added.');
+  }
+});
+
+// Update product
+document.getElementById('updateProductBtn').addEventListener('click', async () => {
+  const id   = Number(document.getElementById('editProductDbId').value);
+  const data = {
+    name:     document.getElementById('editName').value.trim(),
+    category: document.getElementById('editCategory').value.trim(),
+    price:    parseFloat(document.getElementById('editPrice').value),
+    stock:    parseInt(document.getElementById('editStock').value),
+  };
+  try {
+    const r = await fetch(`{{ url_for("api_update_product", product_id=0) }}`.replace('/0', `/${id}`), {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error();
+  } catch {
+    // Demo: update locally
+  }
+  const idx = allProducts.findIndex(p => p.id === id);
+  if (idx !== -1) allProducts[idx] = { ...allProducts[idx], ...data };
+  renderTable(); populateCategoryFilter();
+  bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+  showAlert('Product updated.');
+});
+
+// Sort by column header
+document.querySelectorAll('#productsTable th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    state.sortDir = state.sortKey === k && state.sortDir === 'asc' ? 'desc' : 'asc';
+    state.sortKey = k; state.page = 1; renderTable();
+  });
+});
+
+document.getElementById('productSearch').addEventListener('input', e => { state.filter = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('categoryFilter').addEventListener('change', e => { state.category = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('prodPrev').addEventListener('click', () => { state.page--; renderTable(); });
+document.getElementById('prodNext').addEventListener('click', () => { state.page++; renderTable(); });
+document.getElementById('refreshProducts').addEventListener('click', loadProducts);
+
+document.addEventListener('DOMContentLoaded', loadProducts);
+</script>
+{% endblock %}

@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% block title %}Sales Forecasts | ACME{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/forecast_dashboard.css') }}" rel="stylesheet"/>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+{% endblock %}
+
+{% block nav_brand %}Forecasts{% endblock %}
+
+{% block nav_actions %}
+<a href="#download" class="btn-nav btn-nav-light d-none d-md-inline-flex">
+  <i class="fa-solid fa-download"></i> Export
+</a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar-section-label">Navigation</div>
+<a href="{{ url_for('forecast_dashboard') }}" class="sidebar-link active">
+  <i class="fa-solid fa-chart-line"></i> Forecasts
+</a>
+<div class="sidebar-section-label">Tools</div>
+<a href="#product" class="sidebar-link">
+  <i class="fa-solid fa-filter"></i> Select Product
+</a>
+<a href="#download" class="sidebar-link">
+  <i class="fa-solid fa-download"></i> Download Data
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Sales Forecasts</h1>
+    <p class="page-subtitle">View historical data and predicted sales for each product</p>
+  </div>
+  <button class="btn btn-outline-subtle btn-sm" id="refreshBtn">
+    <i class="fa-solid fa-rotate-right"></i> Refresh
+  </button>
+</div>
+
+<!-- System Alert -->
+<div class="system-alert alert-info d-none" id="systemAlert">
+  <i class="fa-solid fa-circle-info"></i>
+  <span>Forecasts are generated using the currently active model. Select a product to begin.</span>
+  <button type="button" style="margin-left:auto;background:none;border:none;font-size:1rem;cursor:pointer;opacity:.6;" onclick="this.parentElement.remove()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel" id="product">
+  <div class="row g-3 align-items-end">
+    <div class="col-sm-4 col-lg-3">
+      <label class="form-label">Category</label>
+      <select class="form-select form-select-sm" id="categorySelector">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+    <div class="col-sm-4 col-lg-4">
+      <label class="form-label">Product</label>
+      <select class="form-select form-select-sm" id="productSelector" disabled>
+        <option value="">Select a product…</option>
+      </select>
+    </div>
+    <div class="col-sm-4 col-lg-5">
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm flex-shrink-0" id="applyFilter" disabled>
+          <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Load Forecast
+        </button>
+        <button class="btn btn-outline-subtle btn-sm" id="clearFilter">
+          <i class="fa-solid fa-xmark me-1"></i> Clear
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Card -->
+<div class="chart-card">
+  <div class="chart-card-header">
+    <div>
+      <span class="chart-card-title" id="chartTitle">
+        Forecast vs Historical — <span style="color:var(--text-muted)">Select a Product</span>
+      </span>
+    </div>
+    <div class="chart-legend">
+      <div class="legend-item"><span class="legend-dot legend-dot-historical"></span> Historical</div>
+      <div class="legend-item"><span class="legend-dot legend-dot-forecast"></span> Forecast</div>
+    </div>
+  </div>
+  <div class="chart-card-body" style="position:relative;">
+    <div id="forecastChart" style="height:300px;"></div>
+    <div class="chart-empty" id="chartEmptyState">
+      <i class="fa-solid fa-chart-line"></i>
+      <p>Select a product and click <strong>Load Forecast</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- Data Table -->
+<div class="data-table-card">
+  <div class="table-toolbar">
+    <span class="card-title">Data Table</span>
+    <input type="search" class="form-control form-control-sm table-search-input" id="tableSearch"
+           placeholder="Filter rows…" disabled/>
+    <div class="ms-auto stat-pills">
+      <span class="stat-pill">Historical: <strong id="statHistCount">—</strong></span>
+      <span class="stat-pill">Forecast: <strong id="statFcastCount">—</strong></span>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="data-table" id="previewTable">
+      <thead>
+        <tr>
+          <th role="button" data-sort="date">Date <i class="fa-solid fa-sort fa-xs ms-1 opacity-50"></i></th>
+          <th>Type</th>
+          <th role="button" data-sort="quantity" class="text-end">Quantity <i class="fa-solid fa-sort fa-xs ms-1 opacity-50"></i></th>
+          <th class="text-end">Revenue</th>
+        </tr>
+      </thead>
+      <tbody id="previewTableBody">
+        <tr><td colspan="4" class="empty-state" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+          <i class="fa-solid fa-table fa-2x d-block mb-2 opacity-25"></i>
+          Select a product to see data
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-pagination">
+    <span id="paginationInfo">—</span>
+    <div class="ms-auto d-flex gap-2 align-items-center">
+      <button class="btn btn-outline-subtle btn-sm" id="prevPage" disabled>
+        <i class="fa-solid fa-chevron-left fa-xs"></i>
+      </button>
+      <button class="btn btn-outline-subtle btn-sm" id="nextPage" disabled>
+        <i class="fa-solid fa-chevron-right fa-xs"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Download Panel -->
+<div class="download-panel" id="download">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <span class="card-title">Export Data</span>
+  </div>
+  <div class="export-options">
+    <label class="export-option">
+      <input type="radio" name="exportFormat" value="csv" checked/>
+      <i class="fa-solid fa-file-csv" style="color:var(--success)"></i> CSV
+    </label>
+    <label class="export-option">
+      <input type="radio" name="exportFormat" value="xlsx"/>
+      <i class="fa-solid fa-file-excel" style="color:var(--info)"></i> Excel
+    </label>
+  </div>
+  <button class="btn btn-primary btn-sm mt-1" id="downloadBtn" disabled>
+    <i class="fa-solid fa-download me-1"></i> Download Forecast
+  </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const state = {
+  products: [], categories: [],
+  selectedProduct: null, selectedCategory: '',
+  historicalData: [], forecastData: [],
+  isLoading: false,
+  table: { page: 1, pageSize: 10, sortKey: 'date', sortDir: 'asc', filter: '' }
+};
+
+const els = {
+  productSelector:  document.getElementById('productSelector'),
+  categorySelector: document.getElementById('categorySelector'),
+  applyFilter:      document.getElementById('applyFilter'),
+  clearFilter:      document.getElementById('clearFilter'),
+  refreshBtn:       document.getElementById('refreshBtn'),
+  downloadBtn:      document.getElementById('downloadBtn'),
+  chartTitle:       document.getElementById('chartTitle'),
+  chartEmptyState:  document.getElementById('chartEmptyState'),
+  forecastChart:    document.getElementById('forecastChart'),
+  previewTableBody: document.getElementById('previewTableBody'),
+  paginationInfo:   document.getElementById('paginationInfo'),
+  prevPage:         document.getElementById('prevPage'),
+  nextPage:         document.getElementById('nextPage'),
+  tableSearch:      document.getElementById('tableSearch'),
+  statHistCount:    document.getElementById('statHistCount'),
+  statFcastCount:   document.getElementById('statFcastCount'),
+  systemAlert:      document.getElementById('systemAlert'),
+};
+
+// ---- API ----
+async function fetchProducts() {
+  try {
+    const res = await fetch('{{ url_for("api_get_products") }}');
+    if (!res.ok) throw new Error();
+    const products = await res.json();
+    const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+    return { products, categories };
+  } catch {
+    // Demo data
+    const products = [
+      {id:1, name:'Organic Granola',   category:'Cereals',  price:8.99,  stock:150},
+      {id:2, name:'Almond Butter',     category:'Spreads',  price:12.99, stock:80},
+      {id:3, name:'Green Tea Matcha',  category:'Beverages',price:15.99, stock:200},
+      {id:4, name:'Protein Bars (12)', category:'Snacks',   price:24.99, stock:60},
+      {id:5, name:'Oat Milk 1L',       category:'Beverages',price:3.49,  stock:320},
+    ];
+    return { products, categories: [...new Set(products.map(p => p.category))] };
+  }
+}
+
+async function fetchDataForProduct(productId) {
+  try {
+    const res = await fetch(`{{ url_for("api_forecast", product_id=0) }}`.replace('/0', `/${productId}`));
+    if (!res.ok) throw new Error();
+    return await res.json();
+  } catch {
+    // Demo fallback
+    const historical = [];
+    const forecast   = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      historical.push({ date: d.toISOString().slice(0,7), value: Math.round(100 + Math.random()*200), revenue: Math.round(500 + Math.random()*2000) });
+    }
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      forecast.push({ date: d.toISOString().slice(0,7), value: Math.round(120 + Math.random()*180) });
+    }
+    return { product: state.selectedProduct?.name || '', historical, forecast };
+  }
+}
+
+// ---- Selectors ----
+function populateSelectors() {
+  // Categories
+  els.categorySelector.innerHTML = '<option value="">All Categories</option>' +
+    state.categories.map(c => `<option value="${c}" ${c === state.selectedCategory ? 'selected' : ''}>${c}</option>`).join('');
+
+  // Products
+  const filtered = state.selectedCategory
+    ? state.products.filter(p => p.category === state.selectedCategory)
+    : state.products;
+  els.productSelector.innerHTML = '<option value="">Select a product…</option>' +
+    filtered.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  els.productSelector.disabled = false;
+}
+
+// ---- Chart ----
+function renderChart() {
+  const hist  = state.historicalData;
+  const fcast = state.forecastData;
+  if (!hist.length && !fcast.length) {
+    els.chartEmptyState.classList.remove('d-none');
+    return;
+  }
+  els.chartEmptyState.classList.add('d-none');
+
+  const histTrace = {
+    x: hist.map(d => d.date), y: hist.map(d => d.value),
+    name: 'Historical', type: 'scatter', mode: 'lines+markers',
+    line: { color: '#3b82f6', width: 2 },
+    marker: { size: 5, color: '#3b82f6' }
+  };
+
+  const fcastTrace = {
+    x: fcast.map(d => d.date), y: fcast.map(d => d.value),
+    name: 'Forecast', type: 'scatter', mode: 'lines+markers',
+    line: { color: '#e94560', width: 2, dash: 'dot' },
+    marker: { size: 5, color: '#e94560' }
+  };
+
+  Plotly.newPlot(els.forecastChart, [histTrace, fcastTrace], {
+    margin: { t: 10, b: 40, l: 50, r: 20 },
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { family: 'DM Sans', size: 12, color: '#6b7280' },
+    xaxis: { gridcolor: '#f3f4f6', linecolor: '#e8eaed' },
+    yaxis: { gridcolor: '#f3f4f6', linecolor: '#e8eaed' },
+    legend: { orientation: 'h', y: -0.15 },
+    hovermode: 'x unified',
+  }, { responsive: true, displayModeBar: false });
+
+  els.statHistCount.textContent = hist.length;
+  els.statFcastCount.textContent = fcast.length;
+}
+
+// ---- Table ----
+function rebuildTableRows() {
+  const allRows = [
+    ...state.historicalData.map(d => ({ date: d.date, type: 'historical', quantity: d.value, revenue: d.revenue ?? null })),
+    ...state.forecastData.map(d => ({ date: d.date, type: 'forecast',   quantity: d.value, revenue: null })),
+  ];
+
+  let rows = allRows;
+  if (state.table.filter) {
+    const q = state.table.filter.toLowerCase();
+    rows = rows.filter(r => r.date.includes(q) || r.type.includes(q));
+  }
+
+  rows.sort((a, b) => {
+    let av = a[state.table.sortKey], bv = b[state.table.sortKey];
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    return state.table.sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+
+  const total = rows.length;
+  const start = (state.table.page - 1) * state.table.pageSize;
+  const page  = rows.slice(start, start + state.table.pageSize);
+
+  if (!page.length) {
+    els.previewTableBody.innerHTML = `<tr><td colspan="4" class="empty-state" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No data to display</td></tr>`;
+  } else {
+    els.previewTableBody.innerHTML = page.map(r => `
+      <tr>
+        <td>${r.date}</td>
+        <td><span class="badge-status ${r.type === 'historical' ? 'badge-inactive' : 'badge-warning'}">
+          <span class="badge-dot" style="background:${r.type === 'historical' ? '#3b82f6' : '#e94560'}"></span>
+          ${r.type.charAt(0).toUpperCase() + r.type.slice(1)}
+        </span></td>
+        <td class="text-end">${r.quantity?.toLocaleString() ?? '—'}</td>
+        <td class="text-end">${r.revenue != null ? '$' + r.revenue.toLocaleString() : '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  const shown = page.length ? `${start+1}–${start+page.length}` : '0';
+  els.paginationInfo.textContent = `Showing ${shown} of ${total}`;
+  els.prevPage.disabled = state.table.page <= 1;
+  els.nextPage.disabled = state.table.page >= Math.ceil(total / state.table.pageSize);
+}
+
+// ---- Actions ----
+function onProductChange() {
+  const v = els.productSelector.value;
+  state.selectedProduct = v ? state.products.find(p => String(p.id) === v) : null;
+  els.applyFilter.disabled   = !state.selectedProduct;
+  els.downloadBtn.disabled   = !state.selectedProduct;
+  els.tableSearch.disabled   = !state.selectedProduct;
+}
+
+async function loadDataForSelected() {
+  if (!state.selectedProduct || state.isLoading) return;
+  state.isLoading = true;
+  els.applyFilter.disabled = true;
+  els.applyFilter.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading…';
+  els.chartTitle.innerHTML = `Forecast vs Historical — <strong>${state.selectedProduct.name}</strong>`;
+
+  try {
+    const data = await fetchDataForProduct(state.selectedProduct.id);
+    state.historicalData = data.historical;
+    state.forecastData   = data.forecast;
+    renderChart();
+    state.table.page = 1;
+    rebuildTableRows();
+  } catch {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load forecast data.' });
+  } finally {
+    state.isLoading = false;
+    els.applyFilter.disabled = false;
+    els.applyFilter.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart me-1"></i> Load Forecast';
+  }
+}
+
+function clearFilters() {
+  els.categorySelector.value = '';
+  state.selectedCategory = '';
+  populateSelectors();
+  els.productSelector.value = '';
+  onProductChange();
+  state.historicalData = [];
+  state.forecastData   = [];
+  renderChart();
+  rebuildTableRows();
+  els.chartTitle.innerHTML = 'Forecast vs Historical — <span style="color:var(--text-muted)">Select a Product</span>';
+  els.chartEmptyState.classList.remove('d-none');
+}
+
+function exportCSV() {
+  if (!state.selectedProduct) return;
+  const rows  = state.forecastData;
+  const header = ['Product','Date','Forecasted Quantity'];
+  const csv = [header.join(','), ...rows.map(r => [
+    `"${state.selectedProduct.name}"`, r.date, r.value
+  ].join(','))].join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: `${state.selectedProduct.name.replace(/\s+/g,'_')}_forecast.csv`
+  });
+  a.click(); a.remove();
+}
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', async () => {
+  els.systemAlert.classList.remove('d-none');
+  const { products, categories } = await fetchProducts();
+  state.products   = products;
+  state.categories = categories;
+  populateSelectors();
+
+  // URL param pre-select
+  const qp = new URLSearchParams(location.search).get('product');
+  if (qp) {
+    const opt = Array.from(els.productSelector.options).find(o => o.text.toLowerCase().includes(qp.toLowerCase()));
+    if (opt) { els.productSelector.value = opt.value; onProductChange(); loadDataForSelected(); }
+  }
+
+  els.productSelector.addEventListener('change', onProductChange);
+  els.categorySelector.addEventListener('change', e => {
+    state.selectedCategory = e.target.value;
+    populateSelectors(); els.productSelector.value = ''; onProductChange();
+  });
+  els.applyFilter.addEventListener('click', loadDataForSelected);
+  els.clearFilter.addEventListener('click', clearFilters);
+  els.refreshBtn.addEventListener('click', async () => {
+    const { products, categories } = await fetchProducts();
+    state.products = products; state.categories = categories;
+    populateSelectors();
+  });
+  els.downloadBtn.addEventListener('click', () => {
+    const fmt = document.querySelector('input[name="exportFormat"]:checked').value;
+    if (fmt === 'xlsx') {
+      Swal.fire({ icon: 'info', title: 'Coming Soon', text: 'Excel export will be available soon. Please use CSV.' });
+      return;
+    }
+    exportCSV();
+  });
+  els.tableSearch.addEventListener('input', e => {
+    state.table.filter = e.target.value; state.table.page = 1; rebuildTableRows();
+  });
+  els.prevPage.addEventListener('click', () => { state.table.page--; rebuildTableRows(); });
+  els.nextPage.addEventListener('click', () => { state.table.page++; rebuildTableRows(); });
+
+  document.querySelectorAll('#previewTable thead th[role="button"]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      state.table.sortDir = state.table.sortKey === k && state.table.sortDir === 'asc' ? 'desc' : 'asc';
+      state.table.sortKey = k; state.table.page = 1; rebuildTableRows();
+    });
+  });
+
+  rebuildTableRows();
+});
+</script>
+{% endblock %}

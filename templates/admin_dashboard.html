@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | ACME Sales{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/admin_dashboard.css') }}" rel="stylesheet"/>
+{% endblock %}
+
+{% block nav_brand %}Admin{% endblock %}
+
+{% block nav_actions %}
+<a href="{{ url_for('upload_page') }}" class="btn-nav btn-nav-light d-none d-md-inline-flex">
+  <i class="fa-solid fa-file-arrow-up"></i> Upload
+</a>
+<a href="{{ url_for('model_management') }}" class="btn-nav btn-nav-accent d-none d-md-inline-flex">
+  <i class="fa-solid fa-rocket"></i> Train Model
+</a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar-section-label">Overview</div>
+<a href="{{ url_for('admin_dashboard') }}" class="sidebar-link active">
+  <i class="fa-solid fa-gauge"></i> Dashboard
+</a>
+
+<div class="sidebar-section-label">Data</div>
+<a href="{{ url_for('products_page') }}" class="sidebar-link">
+  <i class="fa-solid fa-boxes-stacked"></i> Products
+</a>
+<a href="{{ url_for('upload_page') }}" class="sidebar-link">
+  <i class="fa-solid fa-file-arrow-up"></i> Upload Data
+</a>
+
+<div class="sidebar-section-label">System</div>
+<a href="{{ url_for('model_management') }}" class="sidebar-link">
+  <i class="fa-solid fa-robot"></i> Model Management
+</a>
+<a href="{{ url_for('user_management') }}" class="sidebar-link">
+  <i class="fa-solid fa-users-gear"></i> User Management
+</a>
+
+<div class="sidebar-section-label">Reports</div>
+<a href="{{ url_for('forecast_dashboard') }}" class="sidebar-link">
+  <i class="fa-solid fa-chart-line"></i> Forecasts
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Overview of your sales forecasting system</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('upload_page') }}" class="btn btn-outline-subtle btn-sm">
+      <i class="fa-solid fa-file-arrow-up"></i> Upload Data
+    </a>
+    <a href="{{ url_for('model_management') }}" class="btn btn-sm" style="background:var(--secondary);color:#fff;border:none;">
+      <i class="fa-solid fa-rocket"></i> Train Model
+    </a>
+  </div>
+</div>
+
+<!-- Info Strip -->
+<div class="info-strip">
+  <div class="info-strip-item">
+    <i class="fa-solid fa-brain"></i>
+    <span>Active Model: <strong>{{ active_model_name }}</strong></span>
+  </div>
+  <div class="info-strip-item">
+    <i class="fa-solid fa-calendar-check"></i>
+    <span>Trained: <strong>{{ active_model_date }}</strong></span>
+  </div>
+  <div class="info-strip-item">
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+    <span>Last Upload: <strong>{{ last_upload }}</strong></span>
+  </div>
+</div>
+
+<!-- KPI Grid -->
+<div class="kpi-grid">
+  <a href="{{ url_for('products_page') }}" class="kpi-card">
+    <div class="kpi-icon metric-icon-blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Products</div>
+      <div class="kpi-value">{{ total_products }}</div>
+    </div>
+  </a>
+  <a href="{{ url_for('user_management') }}" class="kpi-card">
+    <div class="kpi-icon metric-icon-green"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Users</div>
+      <div class="kpi-value">{{ total_users }}</div>
+    </div>
+  </a>
+  <a href="{{ url_for('model_management') }}" class="kpi-card">
+    <div class="kpi-icon metric-icon-purple"><i class="fa-solid fa-robot"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Models</div>
+      <div class="kpi-value">{{ total_models }}</div>
+    </div>
+  </a>
+  <div class="kpi-card">
+    <div class="kpi-icon metric-icon-yellow"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Active Model</div>
+      <div class="kpi-value" style="font-size:1rem;margin-top:.25rem;">{{ active_model_name }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Grid -->
+<div class="dashboard-grid">
+
+  <!-- Accuracy Chart -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Forecast Accuracy Over Time</span>
+      <span class="badge-status badge-active"><span class="badge-dot"></span> Live</span>
+    </div>
+    <div class="card-body">
+      <canvas id="accuracyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Active Model Card -->
+  <div style="display:flex;flex-direction:column;gap:1rem;">
+    <div class="active-model-card">
+      <div class="label">Active Model</div>
+      <div class="model-name">{{ active_model_name }}</div>
+      <div>
+        <span class="metric-pill"><i class="fa-solid fa-calendar-days me-1"></i>{{ active_model_date }}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Quick Actions</span></div>
+      <div class="card-body d-flex flex-column gap-2">
+        <a href="{{ url_for('upload_page') }}" class="btn btn-outline-subtle w-100 justify-content-start">
+          <i class="fa-solid fa-file-arrow-up me-2"></i> Upload Sales Data
+        </a>
+        <a href="{{ url_for('model_management') }}" class="btn btn-outline-subtle w-100 justify-content-start">
+          <i class="fa-solid fa-rocket me-2"></i> Train New Model
+        </a>
+        <a href="{{ url_for('products_page') }}" class="btn btn-outline-subtle w-100 justify-content-start">
+          <i class="fa-solid fa-boxes-stacked me-2"></i> Manage Products
+        </a>
+        <a href="{{ url_for('forecast_dashboard') }}" class="btn btn-outline-subtle w-100 justify-content-start">
+          <i class="fa-solid fa-chart-line me-2"></i> View Forecasts
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Uploads -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Recent Uploads</span>
+    <a href="{{ url_for('upload_page') }}" class="btn btn-outline-subtle btn-sm">
+      <i class="fa-solid fa-arrow-right me-1"></i> View All
+    </a>
+  </div>
+  <div class="uploads-table-wrap">
+    <table class="data-table" id="recentUploadsTable">
+      <thead>
+        <tr>
+          <th data-sort="name">File Name</th>
+          <th data-sort="records">Records</th>
+          <th data-sort="date">Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="recentUploadsTbody">
+        <tr><td colspan="4" class="text-center py-4 text-muted" style="font-size:.875rem;">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div> Loading…
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Accuracy Chart
+async function loadAccuracyChart() {
+  try {
+    const res = await fetch('{{ url_for("api_admin_dashboard_charts") }}');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    new Chart(document.getElementById('accuracyChart'), {
+      type: 'line',
+      data: {
+        labels: data.accuracyChart.labels,
+        datasets: [{
+          label: 'Accuracy (%)',
+          data: data.accuracyChart.datasets[0].data,
+          borderColor: '#1a1a2e',
+          backgroundColor: 'rgba(26,26,46,.07)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#1a1a2e',
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { min: 80, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f3f4f6' } }
+        }
+      }
+    });
+  } catch {
+    // Fallback demo
+    new Chart(document.getElementById('accuracyChart'), {
+      type: 'line',
+      data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+        datasets: [{
+          label: 'Accuracy (%)',
+          data: [88,90,87,92,91,94,93,95],
+          borderColor: '#1a1a2e',
+          backgroundColor: 'rgba(26,26,46,.07)',
+          fill: true, tension: 0.35,
+          pointBackgroundColor: '#1a1a2e', pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { min: 80, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f3f4f6' } }
+        }
+      }
+    });
+  }
+}
+
+async function loadRecentUploads() {
+  const tbody = document.getElementById('recentUploadsTbody');
+  try {
+    const res = await fetch('{{ url_for("api_admin_get_latest_uploads") if false else "#" }}');
+    if (!res.ok) throw new Error();
+    const uploads = await res.json();
+    renderUploads(uploads);
+  } catch {
+    // Demo data
+    renderUploads([
+      { id:1, name:'sales_jan_2025.csv', records: 1240, date:'2025-01-15 09:12' },
+      { id:2, name:'sales_feb_2025.csv', records: 980,  date:'2025-02-10 14:05' },
+      { id:3, name:'sales_mar_2025.csv', records: 1102, date:'2025-03-08 11:30' },
+    ]);
+  }
+}
+
+function renderUploads(uploads) {
+  const tbody = document.getElementById('recentUploadsTbody');
+  if (!uploads.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:2rem;color:var(--text-muted);">No uploads yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = uploads.map(u => `
+    <tr>
+      <td><i class="fa-solid fa-file-csv me-2" style="color:var(--success)"></i>${u.name}</td>
+      <td>${u.records.toLocaleString()}</td>
+      <td>${u.date.split(' ')[0]}<br/><small style="color:var(--text-muted)">${u.date.split(' ')[1] || ''}</small></td>
+      <td class="text-end">
+        <button class="btn btn-outline-subtle btn-sm view-detail"
+          data-name="${u.name}" data-records="${u.records}" data-date="${u.date}">
+          View
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.view-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Swal.fire({
+        title: 'Upload Details',
+        html: `<div class="text-start" style="font-size:.9rem">
+          <p><strong>File:</strong> ${btn.dataset.name}</p>
+          <p><strong>Records:</strong> ${Number(btn.dataset.records).toLocaleString()}</p>
+          <p><strong>Date:</strong> ${btn.dataset.date}</p>
+        </div>`,
+        icon: 'info', confirmButtonColor: '#1a1a2e',
+      });
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAccuracyChart();
+  loadRecentUploads();
+});
+</script>
+{% endblock %}

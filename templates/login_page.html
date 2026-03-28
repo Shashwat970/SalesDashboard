@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login | Sales Forecasting System</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/login_page.css') }}" rel="stylesheet"/>
+</head>
+<body>
+<div class="login-page">
+
+  <!-- Public Nav -->
+  <nav class="public-nav">
+    <a href="{{ url_for('login') }}" class="brand">
+      <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo"
+           onerror="this.onerror=null;this.src='https://placehold.co/28x28/1a1a2e/ffffff?text=SF'"/>
+      Sales Forecasting
+    </a>
+    <div class="public-nav-links">
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Help</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main class="login-hero">
+    <div class="login-box">
+
+      <!-- Logo & title -->
+      <div class="login-logo-wrap">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="ACME Foods"
+             onerror="this.onerror=null;this.src='https://placehold.co/56x56/1a1a2e/ffffff?text=SF'"/>
+        <h1>Sign in</h1>
+        <p>Sales Forecasting System &mdash; Secure access</p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="login-card">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show mb-4" role="alert">
+            <i class="fa-solid fa-{% if cat == 'danger' %}circle-exclamation{% else %}circle-info{% endif %} me-2"></i>
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST" id="loginForm" novalidate>
+          <!-- Username -->
+          <div class="mb-4">
+            <label class="form-label" for="username">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-user fa-sm"></i></span>
+              <input type="text" class="form-control" id="username" name="username"
+                     placeholder="Enter username" autocomplete="username" required/>
+            </div>
+            <div class="invalid-feedback d-none" id="usernameFb">Please enter your username.</div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-lock fa-sm"></i></span>
+              <input type="password" class="form-control" id="password" name="password"
+                     placeholder="Enter password" autocomplete="current-password" required/>
+              <button type="button" class="btn-toggle-password" id="togglePwd" aria-label="Toggle visibility">
+                <i class="fa-solid fa-eye-slash" id="toggleIcon"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback d-none" id="passwordFb">Please enter your password.</div>
+            <small class="caps-warning" id="capsWarning">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i> Caps Lock is on
+            </small>
+          </div>
+
+          <!-- Remember + forgot -->
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe"/>
+              <label class="form-check-label" for="rememberMe" style="font-size:.875rem;color:var(--text-muted);">Remember me</label>
+            </div>
+            <a href="#" class="link-subtle">Forgot password?</a>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn-login" id="loginBtn">
+            <span id="btnLabel">Sign in</span>
+            <span class="spinner-border spinner-border-sm d-none" id="btnSpinner" role="status"></span>
+          </button>
+        </form>
+
+        <!-- Demo accounts -->
+        <div class="demo-accounts">
+          <div class="demo-accounts-title">Test Accounts</div>
+          <div class="demo-row">
+            <span class="demo-role-badge demo-role-admin"><i class="fa-solid fa-shield-halved fa-xs me-1"></i>Admin</span>
+            <span class="demo-cred"><code>admin@acme.com</code> / <code>Admin@123</code></span>
+          </div>
+          <div class="demo-row">
+            <span class="demo-role-badge demo-role-user"><i class="fa-solid fa-user fa-xs me-1"></i>User</span>
+            <span class="demo-cred"><code>user@acme.com</code> / <code>User@123</code></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="public-footer">
+    <span>&copy; <span id="yr"></span> ACME Inc. All rights reserved.</span>
+    <span>Made by <a href="#">Shashwat Srivastava</a></span>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Toggle password visibility
+  document.getElementById('togglePwd').addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    const icon = document.getElementById('toggleIcon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    } else {
+      pwd.type = 'password';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    }
+  });
+
+  // Caps lock indicator
+  document.getElementById('password').addEventListener('keyup', function(e) {
+    const caps = e.getModifierState && e.getModifierState('CapsLock');
+    document.getElementById('capsWarning').classList.toggle('visible', caps);
+  });
+
+  // Remember me - restore username
+  const savedUser = localStorage.getItem('sf_username');
+  if (savedUser) {
+    document.getElementById('username').value = savedUser;
+    document.getElementById('rememberMe').checked = true;
+  }
+
+  // Form submit: show spinner
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    let valid = true;
+
+    document.getElementById('usernameFb').classList.add('d-none');
+    document.getElementById('passwordFb').classList.add('d-none');
+
+    if (!u) {
+      document.getElementById('usernameFb').classList.remove('d-none');
+      valid = false;
+    }
+    if (!p) {
+      document.getElementById('passwordFb').classList.remove('d-none');
+      valid = false;
+    }
+
+    if (!valid) { e.preventDefault(); return; }
+
+    if (document.getElementById('rememberMe').checked) {
+      localStorage.setItem('sf_username', u);
+    } else {
+      localStorage.removeItem('sf_username');
+    }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    document.getElementById('btnLabel').textContent = 'Signing in…';
+    document.getElementById('btnSpinner').classList.remove('d-none');
+  });
+</script>
+</body>
+</html>

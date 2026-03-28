@@ -1,0 +1,118 @@
+/* ============================================================
+   Model Management — Page Specific
+   ============================================================ */
+
+/* Summary stats */
+.model-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Train panel */
+.train-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+.train-panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.btn-train {
+  background: var(--secondary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: .6rem 1.5rem;
+  font-weight: 600;
+  font-size: .9375rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  transition: var(--transition);
+}
+
+.btn-train:hover:not(:disabled) { background: #d63b52; }
+.btn-train:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Status banner */
+.training-status-banner {
+  border-radius: var(--radius);
+  padding: .65rem 1rem;
+  font-size: .875rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+
+/* Chart card */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+.chart-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.chart-card-body { padding: 1.25rem; }
+
+#modelChart { height: 200px !important; }
+
+/* Models table */
+.models-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Metric chips in table */
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: .1rem .55rem;
+  font-size: .75rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* R² score color */
+.r2-high  { color: var(--success); }
+.r2-mid   { color: var(--warning); }
+.r2-low   { color: var(--danger);  }
+
+/* Filter bar */
+.model-filter-bar {
+  padding: .875rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
